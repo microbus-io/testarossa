@@ -37,15 +37,26 @@ func FailIf(t TestingT, condition bool, args ...any) bool {
 	}
 	filePath, lineNum := atSourceFileLine()
 	var sb strings.Builder
-	for a := range args {
-		v := fmt.Sprintf("%+v", args[a])
-		if v == "" {
-			continue
+	if len(args) > 1 {
+		if format, ok := args[0].(string); ok && strings.Contains(format, "%") {
+			v := fmt.Sprintf(format, args[1:]...)
+			v = strings.ReplaceAll(v, "\n", "\n    ")
+			sb.WriteString("    ")
+			sb.WriteString(v)
+			sb.WriteString("\n")
 		}
-		v = strings.ReplaceAll(v, "\n", "\n    ")
-		sb.WriteString("    ")
-		sb.WriteString(v)
-		sb.WriteString("\n")
+	}
+	if sb.Len() == 0 {
+		for a := range args {
+			v := fmt.Sprintf("%+v", args[a])
+			if v == "" {
+				continue
+			}
+			v = strings.ReplaceAll(v, "\n", "\n    ")
+			sb.WriteString("    ")
+			sb.WriteString(v)
+			sb.WriteString("\n")
+		}
 	}
 	if lineNum == 0 {
 		fmt.Printf("--- FAIL: %s\n%s", t.Name(), sb.String())

@@ -17,236 +17,259 @@ limitations under the License.
 package testarossa
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 )
 
 // Error fails the test if err is nil.
-func Error(t TestingT, err error, msgAndArgs ...any) bool {
+func Error(t TestingT, err error, args ...any) bool {
 	isNil := err == nil || reflect.ValueOf(err).IsNil()
+	if len(args) == 0 {
+		args = []any{"Expected error"}
+	}
 	return !FailIf(
 		t,
 		isNil,
-		"Expected error",
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // ErrorContains fails the test if the err is nil or if it does not contain the substring.
-func ErrorContains(t TestingT, err error, substr string, msgAndArgs ...any) bool {
+func ErrorContains(t TestingT, err error, substr string, args ...any) bool {
 	isNil := err == nil || reflect.ValueOf(err).IsNil()
+	if len(args) == 0 {
+		if isNil {
+			args = []any{"Expected error to contain '%v'", substr}
+		} else {
+			args = []any{"Expected error '%v' to contain '%v'", err, substr}
+		}
+	}
 	return !FailIf(
 		t,
 		isNil || !strings.Contains(err.Error(), substr),
-		fmt.Sprintf("Expected error to contain '%s'", substr),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // NoError fails the test if err is not nil.
-func NoError(t TestingT, err error, msgAndArgs ...any) bool {
+func NoError(t TestingT, err error, args ...any) bool {
 	isNil := err == nil || reflect.ValueOf(err).IsNil()
+	if len(args) == 0 {
+		args = []any{"Expected no error", err}
+	}
 	return !FailIf(
 		t,
 		!isNil,
-		"Expected no error",
-		err,
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // Equal fails the test if the two values are not equal.
-func Equal(t TestingT, expected any, actual any, msgAndArgs ...any) bool {
+func Equal(t TestingT, expected any, actual any, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected %v, actual %v", expected, actual}
+	}
 	return !FailIf(
 		t,
 		!reflect.DeepEqual(expected, actual),
-		fmt.Sprintf("Expected %v, actual %v", expected, actual),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // NotEqual fails the test if the two values are equal.
-func NotEqual(t TestingT, expected any, actual any, msgAndArgs ...any) bool {
+func NotEqual(t TestingT, expected any, actual any, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected actual not to equal %v", expected}
+	}
 	return !FailIf(
 		t,
 		reflect.DeepEqual(expected, actual),
-		fmt.Sprintf("Expected actual to differ from %v", expected),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // Zero fails the test if the value is not 0.
-func Zero[T int8 | int16 | int32 | int64 | int | float32 | float64](t TestingT, actual T, msgAndArgs ...any) bool {
+func Zero[T int8 | int16 | int32 | int64 | int | float32 | float64](t TestingT, actual T, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected 0, actual %v", actual}
+	}
 	return !FailIf(
 		t,
 		actual != T(0),
-		fmt.Sprintf("Expected 0, actual %v", actual),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // NotZero fails the test if the value is 0.
-func NotZero[T int8 | int16 | int32 | int64 | int | float32 | float64](t TestingT, actual T, msgAndArgs ...any) bool {
+func NotZero[T int8 | int16 | int32 | int64 | int | float32 | float64](t TestingT, actual T, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected not 0"}
+	}
 	return !FailIf(
 		t,
 		actual == T(0),
-		fmt.Sprintf("Expected 0, actual %v", actual),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // True fails the test if the condition is false.
-func True(t TestingT, condition bool, msgAndArgs ...any) bool {
+func True(t TestingT, condition bool, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected condition to be true"}
+	}
 	return !FailIf(
 		t,
 		!condition,
-		"Expected condition to be true",
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // False fails the test if the condition is true.
-func False(t TestingT, condition bool, msgAndArgs ...any) bool {
+func False(t TestingT, condition bool, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected condition to be false"}
+	}
 	return !FailIf(
 		t,
 		condition,
-		"Expected condition to be true",
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // Contains fails the test if the string does not contain a substring.
-func Contains(t TestingT, s string, substr string, msgAndArgs ...any) bool {
+func Contains(t TestingT, s string, substr string, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected '%v' to contain '%v'", s, substr}
+	}
 	return !FailIf(
 		t,
 		!strings.Contains(s, substr),
-		fmt.Sprintf("Expected '%v' to contain '%v'", s, substr),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // NotContains fails the test if the string contain a substring.
-func NotContains(t TestingT, s string, substr string, msgAndArgs ...any) bool {
+func NotContains(t TestingT, s string, substr string, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected '%v' not to contain '%v'", s, substr}
+	}
 	return !FailIf(
 		t,
 		strings.Contains(s, substr),
-		fmt.Sprintf("Expected '%v' not to contain '%v'", s, substr),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // SliceContains fails the test if the slice does not contain the item.
-func SliceContains[T any](t TestingT, slice []T, contains T, msgAndArgs ...any) bool {
+func SliceContains[T any](t TestingT, slice []T, contains T, args ...any) bool {
 	found := false
 	for i := 0; i < len(slice) && !found; i++ {
 		found = reflect.DeepEqual(slice[i], contains)
+	}
+	if len(args) == 0 {
+		args = []any{"Expected to find '%v' in %v", contains, slice}
 	}
 	return !FailIf(
 		t,
 		!found,
-		fmt.Sprintf("'%v' not found in %v", contains, slice),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // SliceNotContains fails the test if the slice contains the item.
-func SliceNotContains[T any](t TestingT, slice []T, contains T, msgAndArgs ...any) bool {
+func SliceNotContains[T any](t TestingT, slice []T, contains T, args ...any) bool {
 	found := false
 	for i := 0; i < len(slice) && !found; i++ {
 		found = reflect.DeepEqual(slice[i], contains)
 	}
+	if len(args) == 0 {
+		args = []any{"Expected not to find '%v' in %v", contains, slice}
+	}
 	return !FailIf(
 		t,
 		found,
-		fmt.Sprintf("'%v' found in %v", contains, slice),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // SliceLen fails the test if the length of the slice does not match the expected len.
-func SliceLen[T any](t TestingT, slice []T, length int, msgAndArgs ...any) bool {
+func SliceLen[T any](t TestingT, slice []T, length int, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected length %d, actual %d", length, len(slice)}
+	}
 	return !FailIf(
 		t,
 		len(slice) != length,
-		fmt.Sprintf("Expected length %d, actual %d", length, len(slice)),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // StrLen fails the test if the length of the string does not match the expected len.
-func StrLen(t TestingT, s string, length int, msgAndArgs ...any) bool {
+func StrLen(t TestingT, s string, length int, args ...any) bool {
+	if len(args) == 0 {
+		args = []any{"Expected '%v' to be of length %d, actual %d", s, length, len(s)}
+	}
 	return !FailIf(
 		t,
 		len(s) != length,
-		fmt.Sprintf("Expected '%s' to be of length %d, actual %d", s, length, len(s)),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // SliceEqual fails the test if the two values are not equal.
-func SliceEqual[T comparable](t TestingT, expected []T, actual []T, msgAndArgs ...any) bool {
+func SliceEqual[T comparable](t TestingT, expected []T, actual []T, args ...any) bool {
 	eq := len(expected) == len(actual)
 	for i := 0; i < len(expected) && eq; i++ {
 		eq = actual[i] == expected[i]
+	}
+	if len(args) == 0 {
+		args = []any{"Expected %v, actual %v", expected, actual}
 	}
 	return !FailIf(
 		t,
 		!eq,
-		fmt.Sprintf("Expected %v, actual %v", expected, actual),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // SliceNotEqual fails the test if the two values are equal.
-func SliceNotEqual[T comparable](t TestingT, expected []T, actual []T, msgAndArgs ...any) bool {
+func SliceNotEqual[T comparable](t TestingT, expected []T, actual []T, args ...any) bool {
 	eq := len(expected) == len(actual)
 	for i := 0; i < len(expected) && eq; i++ {
 		eq = actual[i] == expected[i]
 	}
+	if len(args) == 0 {
+		args = []any{"Expected actual to not equal %v", expected}
+	}
 	return !FailIf(
 		t,
 		eq,
-		fmt.Sprintf("Expected actual to differ from %v", expected),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // Nil fails the test if the object is not nil.
-func Nil(t TestingT, obj any, msgAndArgs ...any) bool {
+func Nil(t TestingT, obj any, args ...any) bool {
 	isNil := obj == nil || reflect.ValueOf(obj).IsNil()
+	if len(args) == 0 {
+		args = []any{"Expected nil, actual %v", obj}
+	}
 	return !FailIf(
 		t,
 		!isNil,
-		fmt.Sprintf("Expected nil, actual %v", obj),
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
 }
 
 // NotNil fails the test if the object is nil.
-func NotNil(t TestingT, obj any, msgAndArgs ...any) bool {
+func NotNil(t TestingT, obj any, args ...any) bool {
 	isNil := obj == nil || reflect.ValueOf(obj).IsNil()
+	if len(args) == 0 {
+		args = []any{"Expected not to be nil"}
+	}
 	return !FailIf(
 		t,
 		isNil,
-		"Expected object not to be nil",
-		formatMsgAndArgs(msgAndArgs...),
+		args...,
 	)
-}
-
-func formatMsgAndArgs(msgAndArgs ...any) string {
-	if len(msgAndArgs) == 0 {
-		return ""
-	}
-	if len(msgAndArgs) == 1 {
-		msg := msgAndArgs[0]
-		if msgAsStr, ok := msg.(string); ok {
-			return msgAsStr
-		}
-		return fmt.Sprintf("%+v", msg)
-	}
-	if len(msgAndArgs) > 1 {
-		return fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
-	}
-	return ""
 }

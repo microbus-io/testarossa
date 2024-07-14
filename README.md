@@ -6,7 +6,7 @@
 
 ```go
 func TestMe(t *testing.T) {
-	testarossa.Equal(t, 1, 0, "You are not the one")
+	testarossa.Equal(t, 1, 0, "You are not the %d", 1)
 	err := errors.New("This is bad")
 	testarossa.NoError(t, err)
 
@@ -22,8 +22,7 @@ outputs
 ```
 --- FAIL: TestMe
     /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:27
-    Expected 1, actual 0
-    You are not the one
+    You are not the 1
 --- FAIL: TestMe
     /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:29
     Expected no error

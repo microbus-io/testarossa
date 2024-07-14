@@ -24,7 +24,7 @@ import (
 )
 
 func TestMe(t *testing.T) {
-	testarossa.Equal(t, 1, 0, "You are not the one")
+	testarossa.Equal(t, 1, 0, "You are not the %d", 1)
 	err := errors.New("This is bad")
 	testarossa.NoError(t, err)
 
