@@ -21,18 +21,18 @@ outputs
 
 ```
 --- FAIL: TestMe
-    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:24
+    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:27
     Expected 1, actual 0
     You are not the one
 --- FAIL: TestMe
-    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:26
+    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:29
     Expected no error
     This is bad
 --- FAIL: TestMe
-    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:29
+    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:32
     These are not the droids you are looking for
 --- FAIL: TestMe
-    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:31
+    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:34
     This is really bad
 --- FAIL: TestMe (0.00s)
 FAIL

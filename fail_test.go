@@ -14,20 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package testarossa
+package testarossa_test
 
 import (
 	"errors"
 	"testing"
+
+	"github.com/microbus-io/testarossa"
 )
 
 func TestMe(t *testing.T) {
-	Equal(t, 1, 0, "You are not the one")
+	testarossa.Equal(t, 1, 0, "You are not the one")
 	err := errors.New("This is bad")
-	NoError(t, err)
+	testarossa.NoError(t, err)
 
 	droids := 1234
-	FailIf(t, droids != 0, "These are not the droids you are looking for")
+	testarossa.FailIf(t, droids != 0, "These are not the droids you are looking for")
 	err = errors.New("This is really bad")
-	FatalIfError(t, err)
+	testarossa.FatalIfError(t, err)
 }

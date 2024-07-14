@@ -26,6 +26,7 @@ import (
 type TestingT interface {
 	Fail()
 	FailNow()
+	Name() string
 }
 
 // FailIf fails the test if the condition is met.
@@ -34,7 +35,7 @@ func FailIf(t TestingT, condition bool, args ...any) bool {
 	if !condition {
 		return false
 	}
-	testName, filePath, lineNum := atSourceFileLine()
+	filePath, lineNum := atSourceFileLine()
 	var sb strings.Builder
 	for a := range args {
 		v := fmt.Sprintf("%+v", args[a])
@@ -46,7 +47,11 @@ func FailIf(t TestingT, condition bool, args ...any) bool {
 		sb.WriteString(v)
 		sb.WriteString("\n")
 	}
-	fmt.Printf("--- FAIL: %s\n    %s:%d\n%s", testName, filePath, lineNum, sb.String())
+	if lineNum == 0 {
+		fmt.Printf("--- FAIL: %s\n%s", t.Name(), sb.String())
+	} else {
+		fmt.Printf("--- FAIL: %s\n    %s:%d\n%s", t.Name(), filePath, lineNum, sb.String())
+	}
 	t.Fail()
 	return true
 }
@@ -69,8 +74,8 @@ func FatalIfError(t TestingT, err error, args ...any) {
 	FatalIf(t, err != nil, append([]any{err}, args...)...)
 }
 
-func atSourceFileLine() (testName string, filePath string, lineNum int) {
-	for lvl := 0; true; lvl++ {
+func atSourceFileLine() (filePath string, lineNum int) {
+	for lvl := 2; true; lvl++ {
 		pc, file, line, ok := runtime.Caller(lvl)
 		if !ok {
 			break
@@ -80,14 +85,21 @@ func atSourceFileLine() (testName string, filePath string, lineNum int) {
 		if p > 0 {
 			funcName = funcName[p+1:]
 		}
-		p = strings.LastIndex(funcName, ".")
+		if strings.HasPrefix(funcName, "testarossa.") {
+			continue
+		}
+		if lineNum == 0 {
+			filePath = file
+			lineNum = line
+		}
+
+		p = strings.Index(funcName, ".")
 		if p > 0 {
 			funcName = funcName[p+1:]
 		}
-		if !strings.HasPrefix(funcName, "Test") && !strings.HasPrefix(funcName, "Benchmark") {
-			continue
+		if strings.HasPrefix(funcName, "Test") || strings.HasPrefix(funcName, "Benchmark") {
+			return file, line
 		}
-		return funcName, file, line
 	}
-	return "", "", 0
+	return filePath, lineNum
 }
