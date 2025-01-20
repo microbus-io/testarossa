@@ -23,7 +23,7 @@ import (
 
 // Error fails the test if err is nil.
 func Error(t TestingT, err error, args ...any) bool {
-	isNil := err == nil || reflect.ValueOf(err).IsNil()
+	isNil := err == nil
 	if len(args) == 0 {
 		args = []any{"Expected error"}
 	}
@@ -36,7 +36,7 @@ func Error(t TestingT, err error, args ...any) bool {
 
 // ErrorContains fails the test if the err is nil or if it does not contain the substring.
 func ErrorContains(t TestingT, err error, substr string, args ...any) bool {
-	isNil := err == nil || reflect.ValueOf(err).IsNil()
+	isNil := err == nil
 	if len(args) == 0 {
 		if isNil {
 			args = []any{"Expected error to contain '%v'", substr}
@@ -53,7 +53,7 @@ func ErrorContains(t TestingT, err error, substr string, args ...any) bool {
 
 // NoError fails the test if err is not nil.
 func NoError(t TestingT, err error, args ...any) bool {
-	isNil := err == nil || reflect.ValueOf(err).IsNil()
+	isNil := err == nil
 	if len(args) == 0 {
 		args = []any{"Expected no error", err}
 	}
@@ -248,9 +248,15 @@ func SliceNotEqual[T comparable](t TestingT, expected []T, actual []T, args ...a
 	)
 }
 
+// isNil checks for nil of an interface.
+func isNil(obj any) bool {
+	defer func() { recover() }()
+	return obj == nil || reflect.ValueOf(obj).IsNil()
+}
+
 // Nil fails the test if the object is not nil.
 func Nil(t TestingT, obj any, args ...any) bool {
-	isNil := obj == nil || reflect.ValueOf(obj).IsNil()
+	isNil := isNil(obj)
 	if len(args) == 0 {
 		args = []any{"Expected nil, actual %v", obj}
 	}
@@ -263,7 +269,7 @@ func Nil(t TestingT, obj any, args ...any) bool {
 
 // NotNil fails the test if the object is nil.
 func NotNil(t TestingT, obj any, args ...any) bool {
-	isNil := obj == nil || reflect.ValueOf(obj).IsNil()
+	isNil := isNil(obj)
 	if len(args) == 0 {
 		args = []any{"Expected not to be nil"}
 	}
