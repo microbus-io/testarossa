@@ -67,7 +67,11 @@ func NoError(t TestingT, err error, args ...any) bool {
 // Equal fails the test if the two values are not equal.
 func Equal(t TestingT, expected any, actual any, args ...any) bool {
 	if len(args) == 0 {
-		args = []any{"Expected %v, actual %v", expected, actual}
+		if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+			args = []any{"Expected type %v, actual type %v", reflect.TypeOf(expected), reflect.TypeOf(actual)}
+		} else {
+			args = []any{"Expected %v, actual %v", expected, actual}
+		}
 	}
 	return !FailIf(
 		t,
@@ -194,14 +198,7 @@ func SliceNotContains[T any](t TestingT, slice []T, contains T, args ...any) boo
 
 // SliceLen fails the test if the length of the slice does not match the expected len.
 func SliceLen[T any](t TestingT, slice []T, length int, args ...any) bool {
-	if len(args) == 0 {
-		args = []any{"Expected length %d, actual %d", length, len(slice)}
-	}
-	return !FailIf(
-		t,
-		len(slice) != length,
-		args...,
-	)
+	return Len(t, slice, length, args...)
 }
 
 // StrLen fails the test if the length of the string does not match the expected len.
@@ -209,9 +206,28 @@ func StrLen(t TestingT, s string, length int, args ...any) bool {
 	if len(args) == 0 {
 		args = []any{"Expected '%v' to be of length %d, actual %d", s, length, len(s)}
 	}
+	return Len(t, s, length, args...)
+}
+
+// MapLen fails the test if the length of the map does not match the expected len.
+func MapLen[K comparable, V any](t TestingT, m map[K]V, length int, args ...any) bool {
+	return Len(t, m, length, args...)
+}
+
+// MapLen fails the test if the length of the string, slice, array, map or chan does not match the expected len.
+func Len(t TestingT, obj any, length int, args ...any) bool {
+	objType := reflect.TypeOf(obj)
+	if FailIf(t, objType.Kind() != reflect.Slice && objType.Kind() != reflect.Array && objType.Kind() != reflect.Map &&
+		objType.Kind() != reflect.String && objType.Kind() != reflect.Chan, "%v doesn't have a length") {
+		return true
+	}
+	actualLength := reflect.ValueOf(obj).Len()
+	if len(args) == 0 {
+		args = []any{"Expected length %d, actual %d", length, actualLength}
+	}
 	return !FailIf(
 		t,
-		len(s) != length,
+		actualLength != length,
 		args...,
 	)
 }
