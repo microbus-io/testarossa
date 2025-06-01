@@ -31,11 +31,6 @@ func (a *Asserter) Error(err error, args ...any) bool {
 	return Error(a.t, err, args...)
 }
 
-// ErrorContains fails the test if the err is nil or if it does not contain the substring.
-func (a *Asserter) ErrorContains(err error, substr string, args ...any) bool {
-	return ErrorContains(a.t, err, substr, args...)
-}
-
 // NoError fails the test if err is not nil.
 func (a *Asserter) NoError(err error, args ...any) bool {
 	return NoError(a.t, err, args...)

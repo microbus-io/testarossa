@@ -124,4 +124,19 @@ func Test_Contains(t *testing.T) {
 
 	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, 1)
 	mt.Passed(t)
+
+	err := errors.New("This is bad")
+	Contains(mt, err, "bad")
+	mt.Passed(t)
+	Contains(mt, err, "really")
+	mt.Failed(t)
+
+	err = nil
+	Contains(mt, err, "bad")
+	mt.Failed(t)
+
+	Contains(mt, nil, 1)
+	mt.Failed(t)
+	NotContains(mt, nil, 1)
+	mt.Passed(t)
 }

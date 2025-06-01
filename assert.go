@@ -36,20 +36,10 @@ func Error(t TestingT, err error, args ...any) bool {
 }
 
 // ErrorContains fails the test if the err is nil or if it does not contain the substring.
+//
+// Deprecated: Use Contains
 func ErrorContains(t TestingT, err error, substr string, args ...any) bool {
-	isNil := err == nil
-	if len(args) == 0 {
-		if isNil {
-			args = []any{"Expected error to contain '%v'", substr}
-		} else {
-			args = []any{"Expected error '%v' to contain '%v'", err.Error(), substr}
-		}
-	}
-	return !FailIf(
-		t,
-		isNil || !strings.Contains(err.Error(), substr),
-		args...,
-	)
+	return Contains(t, err, substr, args...)
 }
 
 // NoError fails the test if err is not nil.
@@ -141,10 +131,23 @@ func False(t TestingT, condition bool, args ...any) bool {
 	)
 }
 
-// Contains fails the test if a string does not contain a substring,
-// or if a slice doesn't not contain an element
+// Contains fails the test if a string or error don't contain a substring,
+// or if a slice doesn't contain an element
 // or if a map doesn't contain a key.
 func Contains(t TestingT, whole any, sub any, args ...any) bool {
+	if isNil(whole) {
+		if len(args) == 0 {
+			args = []any{"Nil does not contain '%v'", sub}
+		}
+		return !FailIf(
+			t,
+			true,
+			args...,
+		)
+	}
+	if err, ok := whole.(error); ok {
+		whole = err.Error()
+	}
 	if len(args) == 0 {
 		args = []any{"Expected '%v' to contain '%v'", whole, sub}
 	}
@@ -179,11 +182,22 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 			args...,
 		)
 	}
-	return !FailIf(t, true, "Type %v doesn't support containment", wholeValue.Type())
+	if len(args) == 0 {
+		args = []any{"Type %v doesn't support containment", wholeValue.Type()}
+	}
+	return !FailIf(t, true, args...)
 }
 
-// NotContains fails the test if the string contain a substring.
+// NotContains fails the test if a string or error contain a substring,
+// or if a slice contains an element
+// or if a map contains a key.
 func NotContains(t TestingT, whole any, sub any, args ...any) bool {
+	if isNil(whole) {
+		return false
+	}
+	if err, ok := whole.(error); ok {
+		whole = err.Error()
+	}
 	if len(args) == 0 {
 		args = []any{"Expected '%v' not to contain '%v'", whole, sub}
 	}
@@ -218,7 +232,10 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 			args...,
 		)
 	}
-	return !FailIf(t, true, "Type %v doesn't support containment", wholeValue.Type())
+	if len(args) == 0 {
+		args = []any{"Type %v doesn't support containment", wholeValue.Type()}
+	}
+	return !FailIf(t, true, args...)
 }
 
 // SliceContains fails the test if the slice does not contain the item.
