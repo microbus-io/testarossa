@@ -161,7 +161,7 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Slice || wholeValue.Type().Kind() == reflect.Array {
-		arr := make([]any, wholeValue.Len())
+		arr := make([]any, 0, wholeValue.Len())
 		for i := range wholeValue.Len() {
 			arr = append(arr, wholeValue.Index(i).Interface())
 		}
@@ -172,7 +172,7 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Map {
-		arr := make([]any, wholeValue.Len())
+		arr := make([]any, 0, wholeValue.Len())
 		for _, key := range wholeValue.MapKeys() {
 			arr = append(arr, key.Interface())
 		}
@@ -211,7 +211,7 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Slice || wholeValue.Type().Kind() == reflect.Array {
-		arr := make([]any, wholeValue.Len())
+		arr := make([]any, 0, wholeValue.Len())
 		for i := range wholeValue.Len() {
 			arr = append(arr, wholeValue.Index(i).Interface())
 		}
@@ -222,7 +222,7 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Map {
-		arr := make([]any, wholeValue.Len())
+		arr := make([]any, 0, wholeValue.Len())
 		for _, key := range wholeValue.MapKeys() {
 			arr = append(arr, key.Interface())
 		}
@@ -275,12 +275,15 @@ func MapLen[K comparable, V any](t TestingT, m map[K]V, length int, args ...any)
 
 // Len fails the test if the length of the string, slice, array, map or chan does not match the expected len.
 func Len(t TestingT, obj any, length int, args ...any) bool {
-	objType := reflect.TypeOf(obj)
-	if FailIf(t, objType.Kind() != reflect.Slice && objType.Kind() != reflect.Array && objType.Kind() != reflect.Map &&
-		objType.Kind() != reflect.String && objType.Kind() != reflect.Chan, "%v doesn't have a length") {
-		return true
+	actualLength := 0
+	if !isNil(obj) {
+		objType := reflect.TypeOf(obj)
+		if FailIf(t, objType.Kind() != reflect.Slice && objType.Kind() != reflect.Array && objType.Kind() != reflect.Map &&
+			objType.Kind() != reflect.String && objType.Kind() != reflect.Chan, "%v doesn't have a length") {
+			return true
+		}
+		actualLength = reflect.ValueOf(obj).Len()
 	}
-	actualLength := reflect.ValueOf(obj).Len()
 	if len(args) == 0 {
 		args = []any{"Expected length %d, actual %d", length, actualLength}
 	}

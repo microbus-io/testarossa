@@ -95,8 +95,12 @@ func Test_Contains(t *testing.T) {
 
 	Contains(mt, []int{1, 2, 3}, "3")
 	mt.Failed(t)
-	Contains(mt, []int{1, 2, 3}, "4")
+	Contains(mt, []int{1, 2, 3}, nil)
 	mt.Failed(t)
+	NotContains(mt, []int{1, 2, 3}, "3")
+	mt.Passed(t)
+	NotContains(mt, []int{1, 2, 3}, nil)
+	mt.Passed(t)
 
 	type E struct {
 		X int
@@ -112,6 +116,15 @@ func Test_Contains(t *testing.T) {
 	NotContains(mt, []E{{1}, {2}, {3}}, E{4})
 	mt.Passed(t)
 
+	Contains(mt, []E{{1}, {2}, {3}}, 1)
+	mt.Failed(t)
+	Contains(mt, []E{{1}, {2}, {3}}, nil)
+	mt.Failed(t)
+	NotContains(mt, []E{{1}, {2}, {3}}, 1)
+	mt.Passed(t)
+	NotContains(mt, []E{{1}, {2}, {3}}, nil)
+	mt.Passed(t)
+
 	Contains(mt, map[string]string{"x": "X", "y": "Y"}, "x")
 	mt.Passed(t)
 	Contains(mt, map[string]string{"x": "X", "y": "Y"}, "z")
@@ -122,7 +135,13 @@ func Test_Contains(t *testing.T) {
 	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, "z")
 	mt.Passed(t)
 
+	Contains(mt, map[string]string{"x": "X", "y": "Y"}, 1)
+	mt.Failed(t)
+	Contains(mt, map[string]string{"x": "X", "y": "Y"}, nil)
+	mt.Failed(t)
 	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, 1)
+	mt.Passed(t)
+	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, nil)
 	mt.Passed(t)
 
 	err := errors.New("This is bad")
@@ -138,5 +157,32 @@ func Test_Contains(t *testing.T) {
 	Contains(mt, nil, 1)
 	mt.Failed(t)
 	NotContains(mt, nil, 1)
+	mt.Passed(t)
+}
+
+func Test_Len(t *testing.T) {
+	mt := &MockTestingT{}
+
+	Len(mt, nil, 0)
+	mt.Passed(t)
+
+	Len(mt, "foo", 3)
+	mt.Passed(t)
+
+	Len(mt, []int{1, 2, 3}, 3)
+	mt.Passed(t)
+	Len(mt, []int{}, 0)
+	mt.Passed(t)
+
+	Len(mt, map[int]int{1: 10, 2: 20, 3: 30}, 3)
+	mt.Passed(t)
+	Len(mt, map[int]int{}, 0)
+	mt.Passed(t)
+
+	ch := make(chan bool, 3)
+	ch <- true
+	ch <- true
+	ch <- true
+	Len(mt, ch, 3)
 	mt.Passed(t)
 }
