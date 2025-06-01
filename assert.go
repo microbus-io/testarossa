@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Microbus LLC and various contributors
+Copyright 2024-2025 Microbus LLC and various contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package testarossa
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 )
 
@@ -41,7 +42,7 @@ func ErrorContains(t TestingT, err error, substr string, args ...any) bool {
 		if isNil {
 			args = []any{"Expected error to contain '%v'", substr}
 		} else {
-			args = []any{"Expected error '%v' to contain '%v'", err, substr}
+			args = []any{"Expected error '%v' to contain '%v'", err.Error(), substr}
 		}
 	}
 	return !FailIf(
@@ -70,7 +71,7 @@ func Equal(t TestingT, expected any, actual any, args ...any) bool {
 		if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 			args = []any{"Expected type %v, actual type %v", reflect.TypeOf(expected), reflect.TypeOf(actual)}
 		} else {
-			args = []any{"Expected %v, actual %v", expected, actual}
+			args = []any{"Expected '%v', actual '%v'", expected, actual}
 		}
 	}
 	return !FailIf(
@@ -83,7 +84,7 @@ func Equal(t TestingT, expected any, actual any, args ...any) bool {
 // NotEqual fails the test if the two values are equal.
 func NotEqual(t TestingT, expected any, actual any, args ...any) bool {
 	if len(args) == 0 {
-		args = []any{"Expected actual not to equal %v", expected}
+		args = []any{"Expected not to equal '%v'", expected}
 	}
 	return !FailIf(
 		t,
@@ -92,26 +93,26 @@ func NotEqual(t TestingT, expected any, actual any, args ...any) bool {
 	)
 }
 
-// Zero fails the test if the value is not 0.
-func Zero[T int8 | int16 | int32 | int64 | int | float32 | float64](t TestingT, actual T, args ...any) bool {
+// Zero fails the test if the value is not the 0 value of its type.
+func Zero(t TestingT, actual any, args ...any) bool {
 	if len(args) == 0 {
-		args = []any{"Expected 0, actual %v", actual}
+		args = []any{"Expected zero, actual '%v'", actual}
 	}
 	return !FailIf(
 		t,
-		actual != T(0),
+		!reflect.ValueOf(actual).IsZero(),
 		args...,
 	)
 }
 
-// NotZero fails the test if the value is 0.
-func NotZero[T int8 | int16 | int32 | int64 | int | float32 | float64](t TestingT, actual T, args ...any) bool {
+// NotZero fails the test if the value is the 0 value of its type.
+func NotZero(t TestingT, actual any, args ...any) bool {
 	if len(args) == 0 {
-		args = []any{"Expected not 0"}
+		args = []any{"Expected not to be zero, actual '%v'", actual}
 	}
 	return !FailIf(
 		t,
-		actual == T(0),
+		reflect.ValueOf(actual).IsZero(),
 		args...,
 	)
 }
@@ -140,81 +141,122 @@ func False(t TestingT, condition bool, args ...any) bool {
 	)
 }
 
-// Contains fails the test if the string does not contain a substring.
-func Contains(t TestingT, s string, substr string, args ...any) bool {
+// Contains fails the test if a string does not contain a substring,
+// or if a slice doesn't not contain an element
+// or if a map doesn't contain a key.
+func Contains(t TestingT, whole any, sub any, args ...any) bool {
 	if len(args) == 0 {
-		args = []any{"Expected '%v' to contain '%v'", s, substr}
+		args = []any{"Expected '%v' to contain '%v'", whole, sub}
 	}
-	return !FailIf(
-		t,
-		!strings.Contains(s, substr),
-		args...,
-	)
+	wholeValue := reflect.ValueOf(whole)
+	subValue := reflect.ValueOf(sub)
+	if wholeValue.Type().Kind() == reflect.String && subValue.Type().Kind() == reflect.String {
+		return !FailIf(
+			t,
+			!strings.Contains(wholeValue.String(), subValue.String()),
+			args...,
+		)
+	}
+	if wholeValue.Type().Kind() == reflect.Slice || wholeValue.Type().Kind() == reflect.Array {
+		arr := make([]any, wholeValue.Len())
+		for i := range wholeValue.Len() {
+			arr = append(arr, wholeValue.Index(i).Interface())
+		}
+		return !FailIf(
+			t,
+			!slices.Contains(arr, sub),
+			args...,
+		)
+	}
+	if wholeValue.Type().Kind() == reflect.Map {
+		arr := make([]any, wholeValue.Len())
+		for _, key := range wholeValue.MapKeys() {
+			arr = append(arr, key.Interface())
+		}
+		return !FailIf(
+			t,
+			!slices.Contains(arr, sub),
+			args...,
+		)
+	}
+	return !FailIf(t, true, "Type %v doesn't support containment", wholeValue.Type())
 }
 
 // NotContains fails the test if the string contain a substring.
-func NotContains(t TestingT, s string, substr string, args ...any) bool {
+func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 	if len(args) == 0 {
-		args = []any{"Expected '%v' not to contain '%v'", s, substr}
+		args = []any{"Expected '%v' not to contain '%v'", whole, sub}
 	}
-	return !FailIf(
-		t,
-		strings.Contains(s, substr),
-		args...,
-	)
+	wholeValue := reflect.ValueOf(whole)
+	subValue := reflect.ValueOf(sub)
+	if wholeValue.Type().Kind() == reflect.String && subValue.Type().Kind() == reflect.String {
+		return !FailIf(
+			t,
+			strings.Contains(wholeValue.String(), subValue.String()),
+			args...,
+		)
+	}
+	if wholeValue.Type().Kind() == reflect.Slice || wholeValue.Type().Kind() == reflect.Array {
+		arr := make([]any, wholeValue.Len())
+		for i := range wholeValue.Len() {
+			arr = append(arr, wholeValue.Index(i).Interface())
+		}
+		return !FailIf(
+			t,
+			slices.Contains(arr, sub),
+			args...,
+		)
+	}
+	if wholeValue.Type().Kind() == reflect.Map {
+		arr := make([]any, wholeValue.Len())
+		for _, key := range wholeValue.MapKeys() {
+			arr = append(arr, key.Interface())
+		}
+		return !FailIf(
+			t,
+			slices.Contains(arr, sub),
+			args...,
+		)
+	}
+	return !FailIf(t, true, "Type %v doesn't support containment", wholeValue.Type())
 }
 
 // SliceContains fails the test if the slice does not contain the item.
-func SliceContains[T any](t TestingT, slice []T, contains T, args ...any) bool {
-	found := false
-	for i := 0; i < len(slice) && !found; i++ {
-		found = reflect.DeepEqual(slice[i], contains)
-	}
-	if len(args) == 0 {
-		args = []any{"Expected to find '%v' in %v", contains, slice}
-	}
-	return !FailIf(
-		t,
-		!found,
-		args...,
-	)
+//
+// Deprecated: Use Contains
+func SliceContains[T comparable](t TestingT, slice []T, contains T, args ...any) bool {
+	return Contains(t, slice, contains, args...)
 }
 
 // SliceNotContains fails the test if the slice contains the item.
-func SliceNotContains[T any](t TestingT, slice []T, contains T, args ...any) bool {
-	found := false
-	for i := 0; i < len(slice) && !found; i++ {
-		found = reflect.DeepEqual(slice[i], contains)
-	}
-	if len(args) == 0 {
-		args = []any{"Expected not to find '%v' in %v", contains, slice}
-	}
-	return !FailIf(
-		t,
-		found,
-		args...,
-	)
+//
+// Deprecated: Use NotContains
+func SliceNotContains[T comparable](t TestingT, slice []T, contains T, args ...any) bool {
+	return NotContains(t, slice, contains, args...)
 }
 
 // SliceLen fails the test if the length of the slice does not match the expected len.
+//
+// Deprecated: Use Len
 func SliceLen[T any](t TestingT, slice []T, length int, args ...any) bool {
 	return Len(t, slice, length, args...)
 }
 
 // StrLen fails the test if the length of the string does not match the expected len.
+//
+// Deprecated: Use Len
 func StrLen(t TestingT, s string, length int, args ...any) bool {
-	if len(args) == 0 {
-		args = []any{"Expected '%v' to be of length %d, actual %d", s, length, len(s)}
-	}
 	return Len(t, s, length, args...)
 }
 
 // MapLen fails the test if the length of the map does not match the expected len.
+//
+// Deprecated: Use Len
 func MapLen[K comparable, V any](t TestingT, m map[K]V, length int, args ...any) bool {
 	return Len(t, m, length, args...)
 }
 
-// MapLen fails the test if the length of the string, slice, array, map or chan does not match the expected len.
+// Len fails the test if the length of the string, slice, array, map or chan does not match the expected len.
 func Len(t TestingT, obj any, length int, args ...any) bool {
 	objType := reflect.TypeOf(obj)
 	if FailIf(t, objType.Kind() != reflect.Slice && objType.Kind() != reflect.Array && objType.Kind() != reflect.Map &&
@@ -233,35 +275,17 @@ func Len(t TestingT, obj any, length int, args ...any) bool {
 }
 
 // SliceEqual fails the test if the two values are not equal.
+//
+// Deprecated: Use Equal
 func SliceEqual[T comparable](t TestingT, expected []T, actual []T, args ...any) bool {
-	eq := len(expected) == len(actual)
-	for i := 0; i < len(expected) && eq; i++ {
-		eq = actual[i] == expected[i]
-	}
-	if len(args) == 0 {
-		args = []any{"Expected %v, actual %v", expected, actual}
-	}
-	return !FailIf(
-		t,
-		!eq,
-		args...,
-	)
+	return Equal(t, expected, actual, args...)
 }
 
 // SliceNotEqual fails the test if the two values are equal.
+//
+// Deprecated: Use NotEqual
 func SliceNotEqual[T comparable](t TestingT, expected []T, actual []T, args ...any) bool {
-	eq := len(expected) == len(actual)
-	for i := 0; i < len(expected) && eq; i++ {
-		eq = actual[i] == expected[i]
-	}
-	if len(args) == 0 {
-		args = []any{"Expected actual to not equal %v", expected}
-	}
-	return !FailIf(
-		t,
-		eq,
-		args...,
-	)
+	return NotEqual(t, expected, actual, args...)
 }
 
 // isNil checks for nil of an interface.
@@ -274,7 +298,7 @@ func isNil(obj any) bool {
 func Nil(t TestingT, obj any, args ...any) bool {
 	isNil := isNil(obj)
 	if len(args) == 0 {
-		args = []any{"Expected nil, actual %v", obj}
+		args = []any{"Expected nil, actual '%v'", obj}
 	}
 	return !FailIf(
 		t,

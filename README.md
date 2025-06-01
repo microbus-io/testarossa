@@ -4,6 +4,8 @@
 
 `TestaRossa` is a simple utility on top of Go's standard `testing` library that prints the `full/path/to/the/source/file/of/the/unit_test.go:line` of a failed assertion, which in VSCode is a clickable link. Unlike `t.Log`, output is printed using `fmt.Printf` during the execution of the test rather than at its conclusion.
 
+`TestaRossa` supports a functional pattern:
+
 ```go
 func TestMe(t *testing.T) {
 	testarossa.Equal(t, 1, 0, "You are not the %d", 1)
@@ -17,7 +19,19 @@ func TestMe(t *testing.T) {
 }
 ```
 
-outputs
+as well as a more object-oriented pattern:
+
+```go
+func TestMe(t *testing.T) {
+    tt := testarossa.For(t)
+
+	tt.Equal(1, 0, "You are not the %d", 1)
+	err := errors.New("This is bad")
+	tt.NoError(err)
+}
+```
+
+Example test output:
 
 ```
 --- FAIL: TestMe

@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Microbus LLC and various contributors
+Copyright 2024-2025 Microbus LLC and various contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,22 +14,47 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package testarossa_test
+package testarossa
 
 import (
 	"errors"
 	"testing"
-
-	"github.com/microbus-io/testarossa"
 )
 
-func TestMe(t *testing.T) {
-	testarossa.Equal(t, 1, 0, "You are not the %d", 1)
-	err := errors.New("This is bad")
-	testarossa.NoError(t, err)
+type MockTestingT struct {
+	failed bool
+}
+
+func (mt *MockTestingT) Fail() {
+	mt.failed = true
+}
+func (mt *MockTestingT) FailNow() {
+	mt.failed = true
+}
+func (mt *MockTestingT) Name() string {
+	return "Mock"
+}
+func (mt *MockTestingT) Failed(t *testing.T) {
+	if !mt.failed {
+		t.Fail()
+	}
+	mt.failed = false
+}
+func (mt *MockTestingT) Passed(t *testing.T) {
+	if mt.failed {
+		t.Fail()
+	}
+	mt.failed = false
+}
+
+func Test_FailIf(t *testing.T) {
+	mt := &MockTestingT{}
 
 	droids := 1234
-	testarossa.FailIf(t, droids != 0, "These are not the droids you are looking for")
-	err = errors.New("This is really bad")
-	testarossa.FatalIfError(t, err)
+	FailIf(mt, droids != 0, "These are not the droids you are looking for")
+	mt.Failed(t)
+
+	err := errors.New("This is really bad")
+	FatalIfError(mt, err)
+	mt.Failed(t)
 }
