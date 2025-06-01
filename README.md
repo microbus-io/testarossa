@@ -8,14 +8,14 @@
 
 ```go
 func TestMe(t *testing.T) {
-	testarossa.Equal(t, 1, 0, "You are not the %d", 1)
-	err := errors.New("This is bad")
-	testarossa.NoError(t, err)
+    testarossa.Equal(t, 1, 0, "You are not the %d", 1)
+    err := errors.New("This is bad")
+    testarossa.NoError(t, err)
 
-	droids := 1234
-	testarossa.FailIf(t, droids != 0, "These are not the droids you are looking for")
-	err = errors.New("This is really bad")
-	testarossa.FatalIfError(t, err)
+    droids := 1234
+    testarossa.FailIf(t, droids != 0, "These are not the droids you are looking for")
+    err = errors.New("This is really bad")
+    testarossa.FatalIfError(t, err)
 }
 ```
 
@@ -25,9 +25,9 @@ as well as a more object-oriented pattern:
 func TestMe(t *testing.T) {
     tt := testarossa.For(t)
 
-	tt.Equal(1, 0, "You are not the %d", 1)
-	err := errors.New("This is bad")
-	tt.NoError(err)
+    tt.Equal(1, 0, "You are not the %d", 1)
+    err := errors.New("This is bad")
+    tt.NoError(err)
 }
 ```
 
