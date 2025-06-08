@@ -24,14 +24,11 @@ import (
 
 // Error fails the test if err is nil.
 func Error(t TestingT, err error, args ...any) bool {
-	isNil := err == nil
-	if len(args) == 0 {
-		args = []any{"Expected error"}
-	}
+	msgArgs := []any{"Expected error"}
 	return !FailIf(
 		t,
-		isNil,
-		args...,
+		err == nil,
+		append(msgArgs, args...)...,
 	)
 }
 
@@ -44,90 +41,78 @@ func ErrorContains(t TestingT, err error, substr string, args ...any) bool {
 
 // NoError fails the test if err is not nil.
 func NoError(t TestingT, err error, args ...any) bool {
-	isNil := err == nil
-	if len(args) == 0 {
-		args = []any{"Expected no error", err}
-	}
+	msgArgs := []any{"Expected no error", err}
 	return !FailIf(
 		t,
-		!isNil,
-		args...,
+		err != nil,
+		append(msgArgs, args...)...,
 	)
 }
 
 // Equal fails the test if the two values are not equal.
 func Equal(t TestingT, expected any, actual any, args ...any) bool {
-	if len(args) == 0 {
-		if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
-			args = []any{"Expected type %v, actual type %v", reflect.TypeOf(expected), reflect.TypeOf(actual)}
-		} else {
-			args = []any{"Expected '%v', actual '%v'", expected, actual}
-		}
+	var msgArgs []any
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		msgArgs = []any{"Expected type %v, actual type %v", reflect.TypeOf(expected), reflect.TypeOf(actual)}
+	} else {
+		msgArgs = []any{"Expected '%v', actual '%v'", expected, actual}
 	}
 	return !FailIf(
 		t,
 		!reflect.DeepEqual(expected, actual),
-		args...,
+		append(msgArgs, args...)...,
 	)
 }
 
 // NotEqual fails the test if the two values are equal.
 func NotEqual(t TestingT, expected any, actual any, args ...any) bool {
-	if len(args) == 0 {
-		args = []any{"Expected not to equal '%v'", expected}
-	}
+	msgArgs := []any{"Expected not to equal '%v'", expected}
 	return !FailIf(
 		t,
 		reflect.DeepEqual(expected, actual),
-		args...,
+		append(msgArgs, args...)...,
 	)
 }
 
 // Zero fails the test if the value is not the 0 value of its type.
+// Nils are considered zero.
 func Zero(t TestingT, actual any, args ...any) bool {
-	if len(args) == 0 {
-		args = []any{"Expected zero, actual '%v'", actual}
-	}
+	msgArgs := []any{"Expected zero, actual '%v'", actual}
 	return !FailIf(
 		t,
-		!reflect.ValueOf(actual).IsZero(),
-		args...,
+		!isNil(actual) && !reflect.ValueOf(actual).IsZero(),
+		append(msgArgs, args...)...,
 	)
 }
 
 // NotZero fails the test if the value is the 0 value of its type.
+// Nils are considered zero.
 func NotZero(t TestingT, actual any, args ...any) bool {
-	if len(args) == 0 {
-		args = []any{"Expected not to be zero, actual '%v'", actual}
-	}
+	msgArgs := []any{"Expected not to be zero, actual '%v'", actual}
 	return !FailIf(
 		t,
-		reflect.ValueOf(actual).IsZero(),
-		args...,
+		isNil(actual) || reflect.ValueOf(actual).IsZero(),
+		append(msgArgs, args...)...,
 	)
 }
 
 // True fails the test if the condition is false.
 func True(t TestingT, condition bool, args ...any) bool {
-	if len(args) == 0 {
-		args = []any{"Expected condition to be true"}
-	}
+	msgArgs := []any{"Expected condition to be true"}
 	return !FailIf(
 		t,
 		!condition,
-		args...,
+		append(msgArgs, args...)...,
 	)
 }
 
 // False fails the test if the condition is true.
 func False(t TestingT, condition bool, args ...any) bool {
-	if len(args) == 0 {
-		args = []any{"Expected condition to be false"}
-	}
+	msgArgs := []any{"Expected condition to be false"}
 	return !FailIf(
 		t,
 		condition,
-		args...,
+		append(msgArgs, args...)...,
 	)
 }
 
@@ -136,28 +121,24 @@ func False(t TestingT, condition bool, args ...any) bool {
 // or if a map doesn't contain a key.
 func Contains(t TestingT, whole any, sub any, args ...any) bool {
 	if isNil(whole) {
-		if len(args) == 0 {
-			args = []any{"Nil does not contain '%v'", sub}
-		}
+		msgArgs := []any{"Nil does not contain '%v'", sub}
 		return !FailIf(
 			t,
 			true,
-			args...,
+			append(msgArgs, args...)...,
 		)
 	}
 	if err, ok := whole.(error); ok {
 		whole = err.Error()
 	}
-	if len(args) == 0 {
-		args = []any{"Expected '%v' to contain '%v'", whole, sub}
-	}
+	msgArgs := []any{"Expected '%v' to contain '%v'", whole, sub}
 	wholeValue := reflect.ValueOf(whole)
 	subValue := reflect.ValueOf(sub)
 	if wholeValue.Type().Kind() == reflect.String && subValue.Type().Kind() == reflect.String {
 		return !FailIf(
 			t,
 			!strings.Contains(wholeValue.String(), subValue.String()),
-			args...,
+			append(msgArgs, args...)...,
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Slice || wholeValue.Type().Kind() == reflect.Array {
@@ -168,7 +149,7 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 		return !FailIf(
 			t,
 			!slices.Contains(arr, sub),
-			args...,
+			append(msgArgs, args...)...,
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Map {
@@ -179,13 +160,15 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 		return !FailIf(
 			t,
 			!slices.Contains(arr, sub),
-			args...,
+			append(msgArgs, args...)...,
 		)
 	}
-	if len(args) == 0 {
-		args = []any{"Type %v doesn't support containment", wholeValue.Type()}
-	}
-	return !FailIf(t, true, args...)
+	msgArgs = []any{"Type %v doesn't support containment", wholeValue.Type()}
+	return !FailIf(
+		t,
+		true,
+		append(msgArgs, args...)...,
+	)
 }
 
 // NotContains fails the test if a string or error contain a substring,
@@ -198,16 +181,14 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 	if err, ok := whole.(error); ok {
 		whole = err.Error()
 	}
-	if len(args) == 0 {
-		args = []any{"Expected '%v' not to contain '%v'", whole, sub}
-	}
+	msgArgs := []any{"Expected '%v' not to contain '%v'", whole, sub}
 	wholeValue := reflect.ValueOf(whole)
 	subValue := reflect.ValueOf(sub)
 	if wholeValue.Type().Kind() == reflect.String && subValue.Type().Kind() == reflect.String {
 		return !FailIf(
 			t,
 			strings.Contains(wholeValue.String(), subValue.String()),
-			args...,
+			append(msgArgs, args...)...,
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Slice || wholeValue.Type().Kind() == reflect.Array {
@@ -218,7 +199,7 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 		return !FailIf(
 			t,
 			slices.Contains(arr, sub),
-			args...,
+			append(msgArgs, args...)...,
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Map {
@@ -229,13 +210,15 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 		return !FailIf(
 			t,
 			slices.Contains(arr, sub),
-			args...,
+			append(msgArgs, args...)...,
 		)
 	}
-	if len(args) == 0 {
-		args = []any{"Type %v doesn't support containment", wholeValue.Type()}
-	}
-	return !FailIf(t, true, args...)
+	msgArgs = []any{"Type %v doesn't support containment", wholeValue.Type()}
+	return !FailIf(
+		t,
+		true,
+		append(msgArgs, args...)...,
+	)
 }
 
 // SliceContains fails the test if the slice does not contain the item.
@@ -284,13 +267,11 @@ func Len(t TestingT, obj any, length int, args ...any) bool {
 		}
 		actualLength = reflect.ValueOf(obj).Len()
 	}
-	if len(args) == 0 {
-		args = []any{"Expected length %d, actual %d", length, actualLength}
-	}
+	msgArgs := []any{"Expected length %d, actual %d", length, actualLength}
 	return !FailIf(
 		t,
 		actualLength != length,
-		args...,
+		append(msgArgs, args...)...,
 	)
 }
 
@@ -317,25 +298,21 @@ func isNil(obj any) bool {
 // Nil fails the test if the object is not nil.
 func Nil(t TestingT, obj any, args ...any) bool {
 	isNil := isNil(obj)
-	if len(args) == 0 {
-		args = []any{"Expected nil, actual '%v'", obj}
-	}
+	msgArgs := []any{"Expected nil, actual '%v'", obj}
 	return !FailIf(
 		t,
 		!isNil,
-		args...,
+		append(msgArgs, args...)...,
 	)
 }
 
 // NotNil fails the test if the object is nil.
 func NotNil(t TestingT, obj any, args ...any) bool {
 	isNil := isNil(obj)
-	if len(args) == 0 {
-		args = []any{"Expected not to be nil"}
-	}
+	msgArgs := []any{"Expected not to be nil"}
 	return !FailIf(
 		t,
 		isNil,
-		args...,
+		append(msgArgs, args...)...,
 	)
 }

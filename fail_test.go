@@ -58,3 +58,16 @@ func Test_FailIf(t *testing.T) {
 	FatalIfError(mt, err)
 	mt.Failed(t)
 }
+
+func Test_FailIfError(t *testing.T) {
+	mt := &MockTestingT{}
+
+	FailIfError(mt, nil, "No error here")
+	mt.Passed(t)
+
+	t.Run("subtest", func(t *testing.T) {
+		err := errors.New("error here")
+		FailIfError(mt, err, "Not good")
+		mt.Failed(t)
+	})
+}

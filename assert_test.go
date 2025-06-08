@@ -19,6 +19,7 @@ package testarossa
 import (
 	"errors"
 	"testing"
+	"time"
 )
 
 func Test_Equality(t *testing.T) {
@@ -30,6 +31,8 @@ func Test_Equality(t *testing.T) {
 	Equal(mt, 1, 1, "All things equal")
 	mt.Passed(t)
 
+	Equal(mt, "foo", 1)
+	mt.Failed(t)
 	NotEqual(mt, "foo", 1)
 	mt.Passed(t)
 
@@ -149,6 +152,10 @@ func Test_Contains(t *testing.T) {
 	mt.Passed(t)
 	Contains(mt, err, "really")
 	mt.Failed(t)
+	NotContains(mt, err, "bad")
+	mt.Failed(t)
+	NotContains(mt, err, "really")
+	mt.Passed(t)
 
 	err = nil
 	Contains(mt, err, "bad")
@@ -158,6 +165,11 @@ func Test_Contains(t *testing.T) {
 	mt.Failed(t)
 	NotContains(mt, nil, 1)
 	mt.Passed(t)
+
+	Contains(mt, 1, 1)
+	mt.Failed(t)
+	NotContains(mt, 1, 1)
+	mt.Failed(t)
 }
 
 func Test_Len(t *testing.T) {
@@ -184,5 +196,168 @@ func Test_Len(t *testing.T) {
 	ch <- true
 	ch <- true
 	Len(mt, ch, 3)
+	mt.Passed(t)
+
+	Len(mt, 1, 1)
+	mt.Failed(t)
+	Len(mt, false, 1)
+	mt.Failed(t)
+}
+
+func Test_Nil(t *testing.T) {
+	mt := &MockTestingT{}
+
+	i := 123
+	for _, x := range []any{1, true, &i, struct{}{}, "foo"} {
+		NotNil(mt, x)
+		mt.Passed(t)
+		Nil(mt, x)
+		mt.Failed(t)
+	}
+	Nil(mt, nil)
+	mt.Passed(t)
+	NotNil(mt, nil)
+	mt.Failed(t)
+}
+
+func Test_TrueFalse(t *testing.T) {
+	mt := &MockTestingT{}
+
+	True(mt, true)
+	mt.Passed(t)
+	True(mt, false)
+	mt.Failed(t)
+
+	False(mt, false)
+	mt.Passed(t)
+	False(mt, true)
+	mt.Failed(t)
+}
+
+func Test_Zero(t *testing.T) {
+	mt := &MockTestingT{}
+
+	for _, z := range []any{0, "", false, time.Time{}, struct{}{}, nil} {
+		Zero(mt, z)
+		mt.Passed(t)
+		NotZero(mt, z)
+		mt.Failed(t)
+	}
+	i := 123
+	for _, nz := range []any{1, "x", true, time.Now(), struct{ x int }{5}, &i} {
+		NotZero(mt, nz)
+		mt.Passed(t)
+		Zero(mt, nz)
+		mt.Failed(t)
+	}
+}
+
+func Test_SliceLen(t *testing.T) {
+	mt := &MockTestingT{}
+
+	fullSlice := []int{1, 2, 3}
+	SliceLen(mt, fullSlice, 3)
+	mt.Passed(t)
+	SliceLen(mt, fullSlice, 2)
+	mt.Failed(t)
+
+	emptySlice := []int{}
+	SliceLen(mt, emptySlice, 0)
+	mt.Passed(t)
+	SliceLen(mt, emptySlice, 2)
+	mt.Failed(t)
+
+	var nilSlice []int
+	SliceLen(mt, nilSlice, 0)
+	mt.Passed(t)
+	SliceLen(mt, nilSlice, 2)
+	mt.Failed(t)
+}
+
+func Test_MapLen(t *testing.T) {
+	mt := &MockTestingT{}
+
+	fullMap := map[int]int{1: 1, 2: 2, 3: 3}
+	MapLen(mt, fullMap, 3)
+	mt.Passed(t)
+	MapLen(mt, fullMap, 2)
+	mt.Failed(t)
+
+	emptyMap := map[int]int{}
+	MapLen(mt, emptyMap, 0)
+	mt.Passed(t)
+	MapLen(mt, emptyMap, 2)
+	mt.Failed(t)
+
+	var nilMap map[int]int
+	MapLen(mt, nilMap, 0)
+	mt.Passed(t)
+	MapLen(mt, nilMap, 2)
+	mt.Failed(t)
+}
+
+func Test_StrLen(t *testing.T) {
+	mt := &MockTestingT{}
+
+	StrLen(mt, "abc", 3)
+	mt.Passed(t)
+	StrLen(mt, "abc", 2)
+	mt.Failed(t)
+
+	StrLen(mt, "", 0)
+	mt.Passed(t)
+	StrLen(mt, "", 2)
+	mt.Failed(t)
+}
+
+func Test_SliceContains(t *testing.T) {
+	mt := &MockTestingT{}
+
+	s := []int{1, 2, 3}
+	SliceContains(mt, s, 1)
+	mt.Passed(t)
+	SliceContains(mt, s, 0)
+	mt.Failed(t)
+	SliceNotContains(mt, s, 1)
+	mt.Failed(t)
+	SliceNotContains(mt, s, 0)
+	mt.Passed(t)
+
+	s = []int{}
+	SliceContains(mt, s, 0)
+	mt.Failed(t)
+	SliceNotContains(mt, s, 0)
+	mt.Passed(t)
+
+	s = nil
+	SliceContains(mt, s, 0)
+	mt.Failed(t)
+	SliceNotContains(mt, s, 0)
+	mt.Passed(t)
+}
+
+func Test_SliceQual(t *testing.T) {
+	mt := &MockTestingT{}
+
+	SliceEqual(mt, []int{1, 2, 3}, []int{1, 2, 3})
+	mt.Passed(t)
+	SliceEqual(mt, []int{1, 2}, []int{1, 2, 3})
+	mt.Failed(t)
+	SliceEqual(mt, []int{}, []int{1, 2, 3})
+	mt.Failed(t)
+	SliceEqual(mt, nil, []int{1, 2, 3})
+	mt.Failed(t)
+	SliceEqual(mt, []int{1, 2, 3}, nil)
+	mt.Failed(t)
+
+	SliceNotEqual(mt, []int{1, 2, 3}, []int{1, 2, 3})
+	mt.Failed(t)
+	SliceNotEqual(mt, []int{1, 2}, []int{1, 2, 3})
+	mt.Passed(t)
+	SliceNotEqual(mt, []int{}, []int{1, 2, 3})
+	mt.Passed(t)
+	SliceNotEqual(mt, nil, []int{1, 2, 3})
+	mt.Passed(t)
+	SliceNotEqual(mt, []int{1, 2, 3}, nil)
 	mt.Passed(t)
 }

@@ -37,26 +37,25 @@ func FailIf(t TestingT, condition bool, args ...any) bool {
 	}
 	filePath, lineNum := atSourceFileLine()
 	var sb strings.Builder
-	if len(args) > 1 {
-		if format, ok := args[0].(string); ok && strings.Contains(format, "%") {
-			v := fmt.Sprintf(format, args[1:]...)
-			v = strings.ReplaceAll(v, "\n", "\n    ")
-			sb.WriteString("    ")
-			sb.WriteString(v)
-			sb.WriteString("\n")
+	i := 0
+	for i < len(args) {
+		val := ""
+		if str, ok := args[i].(string); ok {
+			pctCount := strings.Count(str, "%") - 2*strings.Count(str, "%%")
+			pctCount = min(pctCount, len(args)-i-1)
+			val = fmt.Sprintf(str, args[i+1:i+1+pctCount]...)
+			i += pctCount + 1
+		} else {
+			val = fmt.Sprintf("%+v", args[i])
+			i++
 		}
-	}
-	if sb.Len() == 0 {
-		for a := range args {
-			v := fmt.Sprintf("%+v", args[a])
-			if v == "" {
-				continue
-			}
-			v = strings.ReplaceAll(v, "\n", "\n    ")
-			sb.WriteString("    ")
-			sb.WriteString(v)
-			sb.WriteString("\n")
+		if val == "" {
+			continue
 		}
+		val = strings.ReplaceAll(val, "\n", "\n    ")
+		sb.WriteString("    ")
+		sb.WriteString(val)
+		sb.WriteString("\n")
 	}
 	if lineNum == 0 {
 		fmt.Printf("--- FAIL: %s\n%s", t.Name(), sb.String())
@@ -96,21 +95,10 @@ func atSourceFileLine() (filePath string, lineNum int) {
 		if p > 0 {
 			funcName = funcName[p+1:]
 		}
-		if strings.HasPrefix(funcName, "testarossa.") {
+		if strings.HasPrefix(funcName, "testarossa.") && !strings.Contains(funcName, ".Test") {
 			continue
 		}
-		if lineNum == 0 {
-			filePath = file
-			lineNum = line
-		}
-
-		p = strings.Index(funcName, ".")
-		if p > 0 {
-			funcName = funcName[p+1:]
-		}
-		if strings.HasPrefix(funcName, "Test") || strings.HasPrefix(funcName, "Benchmark") {
-			return file, line
-		}
+		return file, line
 	}
 	return filePath, lineNum
 }

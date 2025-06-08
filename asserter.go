@@ -16,13 +16,11 @@ limitations under the License.
 
 package testarossa
 
-import "testing"
-
 type Asserter struct {
 	t TestingT
 }
 
-func For(t *testing.T) *Asserter {
+func For(t TestingT) *Asserter {
 	return &Asserter{t: t}
 }
 
