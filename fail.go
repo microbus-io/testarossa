@@ -57,6 +57,9 @@ func FailIf(t TestingT, condition bool, args ...any) bool {
 		sb.WriteString(val)
 		sb.WriteString("\n")
 	}
+	if len(args) == 0 {
+		sb.WriteString("\n")
+	}
 	if lineNum == 0 {
 		fmt.Printf("--- FAIL: %s\n%s", t.Name(), sb.String())
 	} else {
