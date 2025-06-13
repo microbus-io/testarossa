@@ -98,10 +98,17 @@ func atSourceFileLine() (filePath string, lineNum int) {
 		if p > 0 {
 			funcName = funcName[p+1:]
 		}
-		if strings.HasPrefix(funcName, "testarossa.") && !strings.Contains(funcName, ".Test") {
+		if strings.HasPrefix(funcName, "testarossa.") && !strings.HasPrefix(funcName, "testarossa.Test") {
 			continue
 		}
-		return file, line
+		if funcName == "testing.tRunner" {
+			break
+		}
+		filePath = file
+		lineNum = line
+		if strings.Contains(funcName, ".Test") || strings.Contains(funcName, ".Benchmark") {
+			break
+		}
 	}
 	return filePath, lineNum
 }

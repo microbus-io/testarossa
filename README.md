@@ -24,7 +24,6 @@ as well as a more object-oriented pattern:
 ```go
 func TestMe(t *testing.T) {
     tt := testarossa.For(t)
-
     tt.Equal(1, 0, "You are not the %d", 1)
     err := errors.New("This is bad")
     tt.NoError(err)
@@ -35,21 +34,16 @@ Example test output:
 
 ```
 --- FAIL: TestMe
-    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:27
+    /my_projects/github.com/microbus-io/testarossa/my_test.go:10
+    Expected '1', actual '0'
     You are not the 1
 --- FAIL: TestMe
-    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:29
+    /my_projects/github.com/microbus-io/testarossa/my_test.go:12
     Expected no error
     This is bad
---- FAIL: TestMe
-    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:32
-    These are not the droids you are looking for
---- FAIL: TestMe
-    /my_projects/go/github.com/microbus-io/testarossa/fail_test.go:34
-    This is really bad
 --- FAIL: TestMe (0.00s)
 FAIL
-FAIL	github.com/microbus-io/testarossa	0.193s
+FAIL	github.com/microbus-io/testarossa	0.173s
 FAIL
 ```
 
