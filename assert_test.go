@@ -361,3 +361,53 @@ func Test_SliceQual(t *testing.T) {
 	SliceNotEqual(mt, []int{1, 2, 3}, nil)
 	mt.Passed(t)
 }
+
+type stringer struct {
+	x string
+}
+
+func (s *stringer) String() string {
+	return "Stringer" + s.x
+}
+
+func Test_Stringer(t *testing.T) {
+	mt := &MockTestingT{}
+	NotNil(mt, &stringer{})
+	mt.Passed(t)
+	Nil(mt, &stringer{})
+	mt.Failed(t)
+	Nil(mt, (*stringer)(nil))
+	mt.Passed(t)
+
+	Equal(mt, "Stringer", v(&stringer{}))
+	mt.Passed(t)
+	Equal(mt, "Stringer", v((*stringer)(nil)))
+	mt.Failed(t)
+	Equal(mt, "<nil>", v((*stringer)(nil)))
+	mt.Passed(t)
+}
+
+type textMarshaler struct {
+	x string
+}
+
+func (tm *textMarshaler) MarshalText() (text []byte, err error) {
+	return []byte("TextMarshaler" + tm.x), nil
+}
+
+func Test_TextMarshaler(t *testing.T) {
+	mt := &MockTestingT{}
+	NotNil(mt, &textMarshaler{})
+	mt.Passed(t)
+	Nil(mt, &textMarshaler{})
+	mt.Failed(t)
+	Nil(mt, (*textMarshaler)(nil))
+	mt.Passed(t)
+
+	Equal(mt, "TextMarshaler", v(&textMarshaler{}))
+	mt.Passed(t)
+	Equal(mt, "TextMarshaler", v((*textMarshaler)(nil)))
+	mt.Failed(t)
+	Equal(mt, "<nil>", v((*textMarshaler)(nil)))
+	mt.Passed(t)
+}

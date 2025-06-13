@@ -339,12 +339,12 @@ func v(o any) string {
 	if s, ok := o.(string); ok {
 		return truncate(s)
 	}
-	if tm, ok := o.(encoding.TextMarshaler); ok {
+	if tm, ok := o.(encoding.TextMarshaler); ok && !isNil(tm) {
 		if txt, err := tm.MarshalText(); err == nil {
 			return truncate(string(txt))
 		}
 	}
-	if s, ok := o.(fmt.Stringer); ok {
+	if s, ok := o.(fmt.Stringer); ok && !isNil(s) {
 		return truncate(s.String())
 	}
 	return truncate(fmt.Sprintf("%v", o))
