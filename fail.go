@@ -35,7 +35,6 @@ func FailIf(t TestingT, condition bool, args ...any) bool {
 	if !condition {
 		return false
 	}
-	filePath, lineNum := atSourceFileLine()
 	var sb strings.Builder
 	i := 0
 	for i < len(args) {
@@ -60,11 +59,7 @@ func FailIf(t TestingT, condition bool, args ...any) bool {
 	if len(args) == 0 {
 		sb.WriteString("\n")
 	}
-	if lineNum == 0 {
-		fmt.Printf("--- FAIL: %s\n%s", t.Name(), sb.String())
-	} else {
-		fmt.Printf("--- FAIL: %s\n    %s:%d\n%s", t.Name(), filePath, lineNum, sb.String())
-	}
+	fmt.Printf("--- FAIL: %s\n%s%s", t.Name(), stackTrace(), sb.String())
 	t.Fail()
 	return true
 }
@@ -87,7 +82,7 @@ func FatalIfError(t TestingT, err error, args ...any) {
 	FatalIf(t, err != nil, append([]any{err}, args...)...)
 }
 
-func atSourceFileLine() (filePath string, lineNum int) {
+func stackTrace() (stackTrace string) {
 	for lvl := 2; true; lvl++ {
 		pc, file, line, ok := runtime.Caller(lvl)
 		if !ok {
@@ -104,11 +99,10 @@ func atSourceFileLine() (filePath string, lineNum int) {
 		if funcName == "testing.tRunner" {
 			break
 		}
-		filePath = file
-		lineNum = line
+		stackTrace = fmt.Sprintf("    %s:%d\n%s", file, line, stackTrace)
 		if strings.Contains(funcName, ".Test") || strings.Contains(funcName, ".Benchmark") {
 			break
 		}
 	}
-	return filePath, lineNum
+	return stackTrace
 }
