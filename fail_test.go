@@ -36,13 +36,13 @@ func (mt *MockTestingT) Name() string {
 }
 func (mt *MockTestingT) Failed(t *testing.T) {
 	if !mt.failed {
-		t.Fail()
+		t.Fatal()
 	}
 	mt.failed = false
 }
 func (mt *MockTestingT) Passed(t *testing.T) {
 	if mt.failed {
-		t.Fail()
+		t.Fatal()
 	}
 	mt.failed = false
 }

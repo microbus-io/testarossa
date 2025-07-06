@@ -17,10 +17,10 @@ limitations under the License.
 package testarossa
 
 import (
+	"bytes"
 	"encoding"
 	"fmt"
 	"reflect"
-	"slices"
 	"strings"
 )
 
@@ -119,7 +119,8 @@ func False(t TestingT, condition bool, args ...any) bool {
 }
 
 // Contains fails the test if a string or error don't contain a substring,
-// or if a slice doesn't contain an element
+// or if a byte slice doesn't contain a byte subslice,
+// or if a slice doesn't contain an element,
 // or if a map doesn't contain a key.
 func Contains(t TestingT, whole any, sub any, args ...any) bool {
 	if isNil(whole) {
@@ -134,34 +135,52 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 		whole = err.Error()
 	}
 	msgArgs := []any{"Expected '%v' to contain '%v'", v(whole), v(sub)}
-	wholeValue := reflect.ValueOf(whole)
-	subValue := reflect.ValueOf(sub)
-	if wholeValue.Type().Kind() == reflect.String && subValue.Type().Kind() == reflect.String {
-		return !FailIf(
-			t,
-			!strings.Contains(wholeValue.String(), subValue.String()),
-			append(msgArgs, args...)...,
-		)
+	// Strings
+	if w, ok := whole.(string); ok {
+		if s, ok := sub.(string); ok {
+			return !FailIf(
+				t,
+				!strings.Contains(w, s),
+				append(msgArgs, args...)...,
+			)
+		}
 	}
+	// []byte
+	if w, ok := whole.([]byte); ok {
+		if s, ok := sub.([]byte); ok {
+			return !FailIf(
+				t,
+				!bytes.Contains(w, s),
+				append(msgArgs, args...)...,
+			)
+		}
+	}
+	wholeValue := reflect.ValueOf(whole)
 	if wholeValue.Type().Kind() == reflect.Slice || wholeValue.Type().Kind() == reflect.Array {
-		arr := make([]any, 0, wholeValue.Len())
+		found := false
 		for i := range wholeValue.Len() {
-			arr = append(arr, wholeValue.Index(i).Interface())
+			if reflect.DeepEqual(wholeValue.Index(i).Interface(), sub) {
+				found = true
+				break
+			}
 		}
 		return !FailIf(
 			t,
-			!slices.Contains(arr, sub),
+			!found,
 			append(msgArgs, args...)...,
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Map {
-		arr := make([]any, 0, wholeValue.Len())
+		found := false
 		for _, key := range wholeValue.MapKeys() {
-			arr = append(arr, key.Interface())
+			if reflect.DeepEqual(key.Interface(), sub) {
+				found = true
+				break
+			}
 		}
 		return !FailIf(
 			t,
-			!slices.Contains(arr, sub),
+			!found,
 			append(msgArgs, args...)...,
 		)
 	}
@@ -174,7 +193,8 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 }
 
 // NotContains fails the test if a string or error contain a substring,
-// or if a slice contains an element
+// or if a byte slice contains a byte subslice,
+// or if a slice contains an element,
 // or if a map contains a key.
 func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 	if isNil(whole) {
@@ -184,34 +204,52 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 		whole = err.Error()
 	}
 	msgArgs := []any{"Expected '%v' not to contain '%v'", v(whole), v(sub)}
-	wholeValue := reflect.ValueOf(whole)
-	subValue := reflect.ValueOf(sub)
-	if wholeValue.Type().Kind() == reflect.String && subValue.Type().Kind() == reflect.String {
-		return !FailIf(
-			t,
-			strings.Contains(wholeValue.String(), subValue.String()),
-			append(msgArgs, args...)...,
-		)
+	// Strings
+	if w, ok := whole.(string); ok {
+		if s, ok := sub.(string); ok {
+			return !FailIf(
+				t,
+				strings.Contains(w, s),
+				append(msgArgs, args...)...,
+			)
+		}
 	}
+	// []byte
+	if w, ok := whole.([]byte); ok {
+		if s, ok := sub.([]byte); ok {
+			return !FailIf(
+				t,
+				bytes.Contains(w, s),
+				append(msgArgs, args...)...,
+			)
+		}
+	}
+	wholeValue := reflect.ValueOf(whole)
 	if wholeValue.Type().Kind() == reflect.Slice || wholeValue.Type().Kind() == reflect.Array {
-		arr := make([]any, 0, wholeValue.Len())
+		found := false
 		for i := range wholeValue.Len() {
-			arr = append(arr, wholeValue.Index(i).Interface())
+			if reflect.DeepEqual(wholeValue.Index(i).Interface(), sub) {
+				found = true
+				break
+			}
 		}
 		return !FailIf(
 			t,
-			slices.Contains(arr, sub),
+			found,
 			append(msgArgs, args...)...,
 		)
 	}
 	if wholeValue.Type().Kind() == reflect.Map {
-		arr := make([]any, 0, wholeValue.Len())
+		found := false
 		for _, key := range wholeValue.MapKeys() {
-			arr = append(arr, key.Interface())
+			if reflect.DeepEqual(key.Interface(), sub) {
+				found = true
+				break
+			}
 		}
 		return !FailIf(
 			t,
-			slices.Contains(arr, sub),
+			found,
 			append(msgArgs, args...)...,
 		)
 	}

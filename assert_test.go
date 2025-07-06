@@ -76,6 +76,7 @@ func Test_Errors(t *testing.T) {
 func Test_Contains(t *testing.T) {
 	mt := &MockTestingT{}
 
+	// string
 	Contains(mt, "hello world", "hello")
 	mt.Passed(t)
 	Contains(mt, "hello world", "goodbye")
@@ -84,6 +85,26 @@ func Test_Contains(t *testing.T) {
 	NotContains(mt, "hello world", "hello")
 	mt.Failed(t)
 	NotContains(mt, "hello world", "goodbye")
+	mt.Passed(t)
+
+	// []byte
+	Contains(mt, []byte("ABC"), []byte("AB"))
+	mt.Passed(t)
+	Contains(mt, []byte("ABC"), []byte("X"))
+	mt.Failed(t)
+	Contains(mt, []byte("ABC"), []byte("ABCD"))
+	mt.Failed(t)
+	Contains(mt, []byte{}, []byte("X"))
+	mt.Failed(t)
+
+	// slice
+	NotContains(mt, []byte("ABC"), []byte("AB"))
+	mt.Failed(t)
+	NotContains(mt, []byte("ABC"), []byte("X"))
+	mt.Passed(t)
+	NotContains(mt, []byte("ABC"), []byte("ABCD"))
+	mt.Passed(t)
+	NotContains(mt, []byte{}, []byte("X"))
 	mt.Passed(t)
 
 	Contains(mt, []int{1, 2, 3}, 3)
@@ -128,6 +149,7 @@ func Test_Contains(t *testing.T) {
 	NotContains(mt, []E{{1}, {2}, {3}}, nil)
 	mt.Passed(t)
 
+	// map
 	Contains(mt, map[string]string{"x": "X", "y": "Y"}, "x")
 	mt.Passed(t)
 	Contains(mt, map[string]string{"x": "X", "y": "Y"}, "z")
@@ -147,6 +169,7 @@ func Test_Contains(t *testing.T) {
 	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, nil)
 	mt.Passed(t)
 
+	// error
 	err := errors.New("This is bad")
 	Contains(mt, err, "bad")
 	mt.Passed(t)
@@ -161,11 +184,13 @@ func Test_Contains(t *testing.T) {
 	Contains(mt, err, "bad")
 	mt.Failed(t)
 
+	// nil
 	Contains(mt, nil, 1)
 	mt.Failed(t)
 	NotContains(mt, nil, 1)
 	mt.Passed(t)
 
+	// Unsupported type
 	Contains(mt, 1, 1)
 	mt.Failed(t)
 	NotContains(mt, 1, 1)
