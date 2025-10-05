@@ -25,244 +25,326 @@ import (
 func Test_Equality(t *testing.T) {
 	mt := &MockTestingT{}
 
-	Equal(mt, 1, 0, "You are not the %d", 1)
-	mt.Failed(t)
+	if Equal(mt, 1, 0, "You are not the %d", 1) || mt.Passed() {
+		t.FailNow()
+	}
 
-	Equal(mt, 1, 1, "All things equal")
-	mt.Passed(t)
+	if !Equal(mt, 1, 1, "All things equal") || mt.Failed() {
+		t.FailNow()
+	}
 
-	Equal(mt, "foo", 1)
-	mt.Failed(t)
-	NotEqual(mt, "foo", 1)
-	mt.Passed(t)
+	if Equal(mt, "foo", 1) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotEqual(mt, "foo", 1) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Equal(mt, []int{1, 2, 3}, []int{1, 2, 3})
-	mt.Passed(t)
-	NotEqual(mt, []int{1, 2, 3}, []int{1, 2, 3})
-	mt.Failed(t)
+	if !Equal(mt, []int{1, 2, 3}, []int{1, 2, 3}) || mt.Failed() {
+		t.FailNow()
+	}
+	if NotEqual(mt, []int{1, 2, 3}, []int{1, 2, 3}) || mt.Passed() {
+		t.FailNow()
+	}
 
-	Equal(mt, []int{3, 2, 1}, []int{1, 2, 3})
-	mt.Failed(t)
-	NotEqual(mt, []int{3, 2, 1}, []int{1, 2, 3})
-	mt.Passed(t)
+	if Equal(mt, []int{3, 2, 1}, []int{1, 2, 3}) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotEqual(mt, []int{3, 2, 1}, []int{1, 2, 3}) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Equal(mt, map[string]int{"a": 1, "b": 2, "c": 3}, map[string]int{"a": 1, "b": 2, "c": 3})
-	mt.Passed(t)
-	NotEqual(mt, map[string]int{"a": 1, "b": 2, "c": 3}, map[string]int{"a": 1, "b": 2, "c": 3})
-	mt.Failed(t)
+	if !Equal(mt, map[string]int{"a": 1, "b": 2, "c": 3}, map[string]int{"a": 1, "b": 2, "c": 3}) || mt.Failed() {
+		t.FailNow()
+	}
+	if NotEqual(mt, map[string]int{"a": 1, "b": 2, "c": 3}, map[string]int{"a": 1, "b": 2, "c": 3}) || mt.Passed() {
+		t.FailNow()
+	}
 
 	var ptr *struct{}
-	Equal(mt, nil, ptr)
-	mt.Passed(t)
-	NotEqual(mt, nil, ptr)
-	mt.Failed(t)
+	if !Equal(mt, nil, ptr) || mt.Failed() {
+		t.FailNow()
+	}
+	if NotEqual(mt, nil, ptr) || mt.Passed() {
+		t.FailNow()
+	}
 
 	ptr = &struct{}{}
-	Equal(mt, nil, ptr)
-	mt.Failed(t)
-	NotEqual(mt, nil, ptr)
-	mt.Passed(t)
+	if Equal(mt, nil, ptr) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotEqual(mt, nil, ptr) || mt.Failed() {
+		t.FailNow()
+	}
 
 	var arr []int
-	Equal(mt, nil, arr)
-	mt.Passed(t)
-	NotEqual(mt, nil, arr)
-	mt.Failed(t)
+	if !Equal(mt, nil, arr) || mt.Failed() {
+		t.FailNow()
+	}
+	if NotEqual(mt, nil, arr) || mt.Passed() {
+		t.FailNow()
+	}
 
 	arr = []int{1, 2, 3}
-	Equal(mt, nil, arr)
-	mt.Failed(t)
-	NotEqual(mt, nil, arr)
-	mt.Passed(t)
+	if Equal(mt, nil, arr) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotEqual(mt, nil, arr) || t.Failed() {
+		t.FailNow()
+	}
 
 	var err error
-	Equal(mt, nil, err)
-	mt.Passed(t)
-	NotEqual(mt, nil, err)
-	mt.Failed(t)
+	if !Equal(mt, nil, err) || mt.Failed() {
+		t.FailNow()
+	}
+	if NotEqual(mt, nil, err) || mt.Passed() {
+		t.FailNow()
+	}
 
 	err = errors.New("failed")
-	Equal(mt, nil, err)
-	mt.Failed(t)
-	NotEqual(mt, nil, err)
-	mt.Passed(t)
+	if Equal(mt, nil, err) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotEqual(mt, nil, err) || mt.Failed() {
+		t.FailNow()
+	}
 }
 
 func Test_Errors(t *testing.T) {
 	mt := &MockTestingT{}
 
 	var err error
-	NoError(mt, err)
-	mt.Passed(t)
-	Error(mt, err)
-	mt.Failed(t)
+	if !NoError(mt, err) || mt.Failed() {
+		t.FailNow()
+	}
+	if Error(mt, err) || mt.Passed() {
+		t.FailNow()
+	}
 
 	err = errors.New("This is bad")
-	NoError(mt, err)
-	mt.Failed(t)
-	Error(mt, err)
-	mt.Passed(t)
+	if NoError(mt, err) || mt.Passed() {
+		t.FailNow()
+	}
+	if !Error(mt, err) || mt.Failed() {
+		t.FailNow()
+	}
 
-	ErrorContains(mt, err, "bad")
-	mt.Passed(t)
-	ErrorContains(mt, err, "really")
-	mt.Failed(t)
+	if !ErrorContains(mt, err, "bad") || mt.Failed() {
+		t.FailNow()
+	}
+	if ErrorContains(mt, err, "really") || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_Contains(t *testing.T) {
 	mt := &MockTestingT{}
 
 	// string
-	Contains(mt, "hello world", "hello")
-	mt.Passed(t)
-	Contains(mt, "hello world", "goodbye")
-	mt.Failed(t)
+	if !Contains(mt, "hello world", "hello") || mt.Failed() {
+		t.FailNow()
+	}
+	if Contains(mt, "hello world", "goodbye") || mt.Passed() {
+		t.FailNow()
+	}
 
-	NotContains(mt, "hello world", "hello")
-	mt.Failed(t)
-	NotContains(mt, "hello world", "goodbye")
-	mt.Passed(t)
+	if NotContains(mt, "hello world", "hello") || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, "hello world", "goodbye") || mt.Failed() {
+		t.FailNow()
+	}
 
 	// []byte
-	Contains(mt, []byte("ABC"), []byte("AB"))
-	mt.Passed(t)
-	Contains(mt, []byte("ABC"), []byte("X"))
-	mt.Failed(t)
-	Contains(mt, []byte("ABC"), []byte("ABCD"))
-	mt.Failed(t)
-	Contains(mt, []byte{}, []byte("X"))
-	mt.Failed(t)
+	if !Contains(mt, []byte("ABC"), []byte("AB")) || mt.Failed() {
+		t.FailNow()
+	}
+	if Contains(mt, []byte("ABC"), []byte("X")) || mt.Passed() {
+		t.FailNow()
+	}
+	if Contains(mt, []byte("ABC"), []byte("ABCD")) || mt.Passed() {
+		t.FailNow()
+	}
+	if Contains(mt, []byte{}, []byte("X")) || mt.Passed() {
+		t.FailNow()
+	}
 
 	// slice
-	NotContains(mt, []byte("ABC"), []byte("AB"))
-	mt.Failed(t)
-	NotContains(mt, []byte("ABC"), []byte("X"))
-	mt.Passed(t)
-	NotContains(mt, []byte("ABC"), []byte("ABCD"))
-	mt.Passed(t)
-	NotContains(mt, []byte{}, []byte("X"))
-	mt.Passed(t)
+	if NotContains(mt, []byte("ABC"), []byte("AB")) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []byte("ABC"), []byte("X")) || mt.Failed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []byte("ABC"), []byte("ABCD")) || mt.Failed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []byte{}, []byte("X")) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Contains(mt, []int{1, 2, 3}, 3)
-	mt.Passed(t)
-	Contains(mt, []int{1, 2, 3}, 4)
-	mt.Failed(t)
+	if !Contains(mt, []int{1, 2, 3}, 3) || mt.Failed() {
+		t.FailNow()
+	}
+	if Contains(mt, []int{1, 2, 3}, 4) || mt.Passed() {
+		t.FailNow()
+	}
 
-	NotContains(mt, []int{1, 2, 3}, 3)
-	mt.Failed(t)
-	NotContains(mt, []int{1, 2, 3}, 4)
-	mt.Passed(t)
+	if NotContains(mt, []int{1, 2, 3}, 3) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []int{1, 2, 3}, 4) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Contains(mt, []int{1, 2, 3}, "3")
-	mt.Failed(t)
-	Contains(mt, []int{1, 2, 3}, nil)
-	mt.Failed(t)
-	NotContains(mt, []int{1, 2, 3}, "3")
-	mt.Passed(t)
-	NotContains(mt, []int{1, 2, 3}, nil)
-	mt.Passed(t)
+	if Contains(mt, []int{1, 2, 3}, "3") || mt.Passed() {
+		t.FailNow()
+	}
+	if Contains(mt, []int{1, 2, 3}, nil) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []int{1, 2, 3}, "3") || mt.Failed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []int{1, 2, 3}, nil) || mt.Failed() {
+		t.FailNow()
+	}
 
 	type E struct {
 		X int
 	}
 
-	Contains(mt, []E{{1}, {2}, {3}}, E{3})
-	mt.Passed(t)
-	Contains(mt, []E{{1}, {2}, {3}}, E{4})
-	mt.Failed(t)
+	if !Contains(mt, []E{{1}, {2}, {3}}, E{3}) || mt.Failed() {
+		t.FailNow()
+	}
+	if Contains(mt, []E{{1}, {2}, {3}}, E{4}) || mt.Passed() {
+		t.FailNow()
+	}
 
-	NotContains(mt, []E{{1}, {2}, {3}}, E{3})
-	mt.Failed(t)
-	NotContains(mt, []E{{1}, {2}, {3}}, E{4})
-	mt.Passed(t)
+	if NotContains(mt, []E{{1}, {2}, {3}}, E{3}) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []E{{1}, {2}, {3}}, E{4}) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Contains(mt, []E{{1}, {2}, {3}}, 1)
-	mt.Failed(t)
-	Contains(mt, []E{{1}, {2}, {3}}, nil)
-	mt.Failed(t)
-	NotContains(mt, []E{{1}, {2}, {3}}, 1)
-	mt.Passed(t)
-	NotContains(mt, []E{{1}, {2}, {3}}, nil)
-	mt.Passed(t)
+	if Contains(mt, []E{{1}, {2}, {3}}, 1) || mt.Passed() {
+		t.FailNow()
+	}
+	if Contains(mt, []E{{1}, {2}, {3}}, nil) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []E{{1}, {2}, {3}}, 1) || mt.Failed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []E{{1}, {2}, {3}}, nil) || mt.Failed() {
+		t.FailNow()
+	}
 
 	// map
-	Contains(mt, map[string]string{"x": "X", "y": "Y"}, "x")
-	mt.Passed(t)
-	Contains(mt, map[string]string{"x": "X", "y": "Y"}, "z")
-	mt.Failed(t)
+	if !Contains(mt, map[string]string{"x": "X", "y": "Y"}, "x") || mt.Failed() {
+		t.FailNow()
+	}
+	if Contains(mt, map[string]string{"x": "X", "y": "Y"}, "z") || mt.Passed() {
+		t.FailNow()
+	}
 
-	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, "x")
-	mt.Failed(t)
-	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, "z")
-	mt.Passed(t)
+	if NotContains(mt, map[string]string{"x": "X", "y": "Y"}, "x") || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, map[string]string{"x": "X", "y": "Y"}, "z") || mt.Failed() {
+		t.FailNow()
+	}
 
-	Contains(mt, map[string]string{"x": "X", "y": "Y"}, 1)
-	mt.Failed(t)
-	Contains(mt, map[string]string{"x": "X", "y": "Y"}, nil)
-	mt.Failed(t)
-	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, 1)
-	mt.Passed(t)
-	NotContains(mt, map[string]string{"x": "X", "y": "Y"}, nil)
-	mt.Passed(t)
+	if Contains(mt, map[string]string{"x": "X", "y": "Y"}, 1) || mt.Passed() {
+		t.FailNow()
+	}
+	if Contains(mt, map[string]string{"x": "X", "y": "Y"}, nil) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, map[string]string{"x": "X", "y": "Y"}, 1) || mt.Failed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, map[string]string{"x": "X", "y": "Y"}, nil) || mt.Failed() {
+		t.FailNow()
+	}
 
 	// error
 	err := errors.New("This is bad")
-	Contains(mt, err, "bad")
-	mt.Passed(t)
-	Contains(mt, err, "really")
-	mt.Failed(t)
-	NotContains(mt, err, "bad")
-	mt.Failed(t)
-	NotContains(mt, err, "really")
-	mt.Passed(t)
+	if !Contains(mt, err, "bad") || mt.Failed() {
+		t.FailNow()
+	}
+	if Contains(mt, err, "really") || mt.Passed() {
+		t.FailNow()
+	}
+	if NotContains(mt, err, "bad") || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, err, "really") || mt.Failed() {
+		t.FailNow()
+	}
 
 	err = nil
-	Contains(mt, err, "bad")
-	mt.Failed(t)
+	if Contains(mt, err, "bad") || mt.Passed() {
+		t.FailNow()
+	}
 
-	// nil
-	Contains(mt, nil, 1)
-	mt.Failed(t)
-	NotContains(mt, nil, 1)
-	mt.Passed(t)
+	// nil container
+	if Contains(mt, nil, 1) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, nil, 1) || mt.Failed() {
+		t.FailNow()
+	}
 
 	// Unsupported type
-	Contains(mt, 1, 1)
-	mt.Failed(t)
-	NotContains(mt, 1, 1)
-	mt.Failed(t)
+	if Contains(mt, 1, 1) || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, 1, 1) || mt.Failed() {
+		t.FailNow()
+	}
 }
 
 func Test_Len(t *testing.T) {
 	mt := &MockTestingT{}
 
-	Len(mt, nil, 0)
-	mt.Passed(t)
+	if !Len(mt, nil, 0) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Len(mt, "foo", 3)
-	mt.Passed(t)
+	if !Len(mt, "foo", 3) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Len(mt, []int{1, 2, 3}, 3)
-	mt.Passed(t)
-	Len(mt, []int{}, 0)
-	mt.Passed(t)
+	if !Len(mt, []int{1, 2, 3}, 3) || mt.Failed() {
+		t.FailNow()
+	}
+	if !Len(mt, []int{}, 0) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Len(mt, map[int]int{1: 10, 2: 20, 3: 30}, 3)
-	mt.Passed(t)
-	Len(mt, map[int]int{}, 0)
-	mt.Passed(t)
+	if !Len(mt, map[int]int{1: 10, 2: 20, 3: 30}, 3) || mt.Failed() {
+		t.FailNow()
+	}
+	if !Len(mt, map[int]int{}, 0) || mt.Failed() {
+		t.FailNow()
+	}
 
 	ch := make(chan bool, 3)
 	ch <- true
 	ch <- true
 	ch <- true
-	Len(mt, ch, 3)
-	mt.Passed(t)
+	if !Len(mt, ch, 3) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Len(mt, 1, 1)
-	mt.Failed(t)
-	Len(mt, false, 1)
-	mt.Failed(t)
+	if Len(mt, 1, 1) || mt.Passed() {
+		t.FailNow()
+	}
+	if Len(mt, false, 1) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_Nil(t *testing.T) {
@@ -270,46 +352,58 @@ func Test_Nil(t *testing.T) {
 
 	i := 123
 	for _, x := range []any{1, true, &i, struct{}{}, "foo"} {
-		NotNil(mt, x)
-		mt.Passed(t)
-		Nil(mt, x)
-		mt.Failed(t)
+		if !NotNil(mt, x) || mt.Failed() {
+			t.FailNow()
+		}
+		if Nil(mt, x) || mt.Passed() {
+			t.FailNow()
+		}
 	}
-	Nil(mt, nil)
-	mt.Passed(t)
-	NotNil(mt, nil)
-	mt.Failed(t)
+	if !Nil(mt, nil) || mt.Failed() {
+		t.FailNow()
+	}
+	if NotNil(mt, nil) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_TrueFalse(t *testing.T) {
 	mt := &MockTestingT{}
 
-	True(mt, true)
-	mt.Passed(t)
-	True(mt, false)
-	mt.Failed(t)
+	if !True(mt, true) || mt.Failed() {
+		t.FailNow()
+	}
+	if True(mt, false) || mt.Passed() {
+		t.FailNow()
+	}
 
-	False(mt, false)
-	mt.Passed(t)
-	False(mt, true)
-	mt.Failed(t)
+	if !False(mt, false) || mt.Failed() {
+		t.FailNow()
+	}
+	if False(mt, true) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_Zero(t *testing.T) {
 	mt := &MockTestingT{}
 
 	for _, z := range []any{0, "", false, time.Time{}, struct{}{}, nil} {
-		Zero(mt, z)
-		mt.Passed(t)
-		NotZero(mt, z)
-		mt.Failed(t)
+		if !Zero(mt, z) || mt.Failed() {
+			t.FailNow()
+		}
+		if NotZero(mt, z) || mt.Passed() {
+			t.FailNow()
+		}
 	}
 	i := 123
 	for _, nz := range []any{1, "x", true, time.Now(), struct{ x int }{5}, &i} {
-		NotZero(mt, nz)
-		mt.Passed(t)
-		Zero(mt, nz)
-		mt.Failed(t)
+		if !NotZero(mt, nz) || mt.Failed() {
+			t.FailNow()
+		}
+		if Zero(mt, nz) || mt.Passed() {
+			t.FailNow()
+		}
 	}
 }
 
@@ -317,110 +411,144 @@ func Test_SliceLen(t *testing.T) {
 	mt := &MockTestingT{}
 
 	fullSlice := []int{1, 2, 3}
-	SliceLen(mt, fullSlice, 3)
-	mt.Passed(t)
-	SliceLen(mt, fullSlice, 2)
-	mt.Failed(t)
+	if !SliceLen(mt, fullSlice, 3) || mt.Failed() {
+		t.FailNow()
+	}
+	if SliceLen(mt, fullSlice, 2) || mt.Passed() {
+		t.FailNow()
+	}
 
 	emptySlice := []int{}
-	SliceLen(mt, emptySlice, 0)
-	mt.Passed(t)
-	SliceLen(mt, emptySlice, 2)
-	mt.Failed(t)
+	if !SliceLen(mt, emptySlice, 0) || mt.Failed() {
+		t.FailNow()
+	}
+	if SliceLen(mt, emptySlice, 2) || mt.Passed() {
+		t.FailNow()
+	}
 
 	var nilSlice []int
-	SliceLen(mt, nilSlice, 0)
-	mt.Passed(t)
-	SliceLen(mt, nilSlice, 2)
-	mt.Failed(t)
+	if !SliceLen(mt, nilSlice, 0) || mt.Failed() {
+		t.FailNow()
+	}
+	if SliceLen(mt, nilSlice, 2) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_MapLen(t *testing.T) {
 	mt := &MockTestingT{}
 
 	fullMap := map[int]int{1: 1, 2: 2, 3: 3}
-	MapLen(mt, fullMap, 3)
-	mt.Passed(t)
-	MapLen(mt, fullMap, 2)
-	mt.Failed(t)
+	if !MapLen(mt, fullMap, 3) || mt.Failed() {
+		t.FailNow()
+	}
+	if MapLen(mt, fullMap, 2) || mt.Passed() {
+		t.FailNow()
+	}
 
 	emptyMap := map[int]int{}
-	MapLen(mt, emptyMap, 0)
-	mt.Passed(t)
-	MapLen(mt, emptyMap, 2)
-	mt.Failed(t)
+	if !MapLen(mt, emptyMap, 0) || mt.Failed() {
+		t.FailNow()
+	}
+	if MapLen(mt, emptyMap, 2) || mt.Passed() {
+		t.FailNow()
+	}
 
 	var nilMap map[int]int
-	MapLen(mt, nilMap, 0)
-	mt.Passed(t)
-	MapLen(mt, nilMap, 2)
-	mt.Failed(t)
+	if !MapLen(mt, nilMap, 0) || mt.Failed() {
+		t.FailNow()
+	}
+	if MapLen(mt, nilMap, 2) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_StrLen(t *testing.T) {
 	mt := &MockTestingT{}
 
-	StrLen(mt, "abc", 3)
-	mt.Passed(t)
-	StrLen(mt, "abc", 2)
-	mt.Failed(t)
+	if !StrLen(mt, "abc", 3) || mt.Failed() {
+		t.FailNow()
+	}
+	if StrLen(mt, "abc", 2) || mt.Passed() {
+		t.FailNow()
+	}
 
-	StrLen(mt, "", 0)
-	mt.Passed(t)
-	StrLen(mt, "", 2)
-	mt.Failed(t)
+	if !StrLen(mt, "", 0) || mt.Failed() {
+		t.FailNow()
+	}
+	if StrLen(mt, "", 2) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_SliceContains(t *testing.T) {
 	mt := &MockTestingT{}
 
 	s := []int{1, 2, 3}
-	SliceContains(mt, s, 1)
-	mt.Passed(t)
-	SliceContains(mt, s, 0)
-	mt.Failed(t)
-	SliceNotContains(mt, s, 1)
-	mt.Failed(t)
-	SliceNotContains(mt, s, 0)
-	mt.Passed(t)
+	if !SliceContains(mt, s, 1) || mt.Failed() {
+		t.FailNow()
+	}
+	if SliceContains(mt, s, 0) || mt.Passed() {
+		t.FailNow()
+	}
+	if SliceNotContains(mt, s, 1) || mt.Passed() {
+		t.FailNow()
+	}
+	if !SliceNotContains(mt, s, 0) || mt.Failed() {
+		t.FailNow()
+	}
 
 	s = []int{}
-	SliceContains(mt, s, 0)
-	mt.Failed(t)
-	SliceNotContains(mt, s, 0)
-	mt.Passed(t)
+	if SliceContains(mt, s, 0) || mt.Passed() {
+		t.FailNow()
+	}
+	if !SliceNotContains(mt, s, 0) || mt.Failed() {
+		t.FailNow()
+	}
 
 	s = nil
-	SliceContains(mt, s, 0)
-	mt.Failed(t)
-	SliceNotContains(mt, s, 0)
-	mt.Passed(t)
+	if SliceContains(mt, s, 0) || mt.Passed() {
+		t.FailNow()
+	}
+	if !SliceNotContains(mt, s, 0) || mt.Failed() {
+		t.FailNow()
+	}
 }
 
 func Test_SliceQual(t *testing.T) {
 	mt := &MockTestingT{}
 
-	SliceEqual(mt, []int{1, 2, 3}, []int{1, 2, 3})
-	mt.Passed(t)
-	SliceEqual(mt, []int{1, 2}, []int{1, 2, 3})
-	mt.Failed(t)
-	SliceEqual(mt, []int{}, []int{1, 2, 3})
-	mt.Failed(t)
-	SliceEqual(mt, nil, []int{1, 2, 3})
-	mt.Failed(t)
-	SliceEqual(mt, []int{1, 2, 3}, nil)
-	mt.Failed(t)
+	if !SliceEqual(mt, []int{1, 2, 3}, []int{1, 2, 3}) || mt.Failed() {
+		t.FailNow()
+	}
+	if SliceEqual(mt, []int{1, 2}, []int{1, 2, 3}) || mt.Passed() {
+		t.FailNow()
+	}
+	if SliceEqual(mt, []int{}, []int{1, 2, 3}) || mt.Passed() {
+		t.FailNow()
+	}
+	if SliceEqual(mt, nil, []int{1, 2, 3}) || mt.Passed() {
+		t.FailNow()
+	}
+	if SliceEqual(mt, []int{1, 2, 3}, nil) || mt.Passed() {
+		t.FailNow()
+	}
 
-	SliceNotEqual(mt, []int{1, 2, 3}, []int{1, 2, 3})
-	mt.Failed(t)
-	SliceNotEqual(mt, []int{1, 2}, []int{1, 2, 3})
-	mt.Passed(t)
-	SliceNotEqual(mt, []int{}, []int{1, 2, 3})
-	mt.Passed(t)
-	SliceNotEqual(mt, nil, []int{1, 2, 3})
-	mt.Passed(t)
-	SliceNotEqual(mt, []int{1, 2, 3}, nil)
-	mt.Passed(t)
+	if SliceNotEqual(mt, []int{1, 2, 3}, []int{1, 2, 3}) || mt.Passed() {
+		t.FailNow()
+	}
+	if !SliceNotEqual(mt, []int{1, 2}, []int{1, 2, 3}) || mt.Failed() {
+		t.FailNow()
+	}
+	if !SliceNotEqual(mt, []int{}, []int{1, 2, 3}) || mt.Failed() {
+		t.FailNow()
+	}
+	if !SliceNotEqual(mt, nil, []int{1, 2, 3}) || mt.Failed() {
+		t.FailNow()
+	}
+	if !SliceNotEqual(mt, []int{1, 2, 3}, nil) || mt.Failed() {
+		t.FailNow()
+	}
 }
 
 type stringer struct {
@@ -433,19 +561,25 @@ func (s *stringer) String() string {
 
 func Test_Stringer(t *testing.T) {
 	mt := &MockTestingT{}
-	NotNil(mt, &stringer{})
-	mt.Passed(t)
-	Nil(mt, &stringer{})
-	mt.Failed(t)
-	Nil(mt, (*stringer)(nil))
-	mt.Passed(t)
+	if !NotNil(mt, &stringer{}) || mt.Failed() {
+		t.FailNow()
+	}
+	if Nil(mt, &stringer{}) || mt.Passed() {
+		t.FailNow()
+	}
+	if !Nil(mt, (*stringer)(nil)) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Equal(mt, "Stringer", v(&stringer{}))
-	mt.Passed(t)
-	Equal(mt, "Stringer", v((*stringer)(nil)))
-	mt.Failed(t)
-	Equal(mt, "<nil>", v((*stringer)(nil)))
-	mt.Passed(t)
+	if !Equal(mt, "Stringer", v(&stringer{})) || mt.Failed() {
+		t.FailNow()
+	}
+	if Equal(mt, "Stringer", v((*stringer)(nil))) || mt.Passed() {
+		t.FailNow()
+	}
+	if !Equal(mt, "<nil>", v((*stringer)(nil))) || mt.Failed() {
+		t.FailNow()
+	}
 }
 
 type textMarshaler struct {
@@ -458,19 +592,25 @@ func (tm *textMarshaler) MarshalText() (text []byte, err error) {
 
 func Test_TextMarshaler(t *testing.T) {
 	mt := &MockTestingT{}
-	NotNil(mt, &textMarshaler{})
-	mt.Passed(t)
-	Nil(mt, &textMarshaler{})
-	mt.Failed(t)
-	Nil(mt, (*textMarshaler)(nil))
-	mt.Passed(t)
+	if !NotNil(mt, &textMarshaler{}) || mt.Failed() {
+		t.FailNow()
+	}
+	if Nil(mt, &textMarshaler{}) || mt.Passed() {
+		t.FailNow()
+	}
+	if !Nil(mt, (*textMarshaler)(nil)) || mt.Failed() {
+		t.FailNow()
+	}
 
-	Equal(mt, "TextMarshaler", v(&textMarshaler{}))
-	mt.Passed(t)
-	Equal(mt, "TextMarshaler", v((*textMarshaler)(nil)))
-	mt.Failed(t)
-	Equal(mt, "<nil>", v((*textMarshaler)(nil)))
-	mt.Passed(t)
+	if !Equal(mt, "TextMarshaler", v(&textMarshaler{})) || mt.Failed() {
+		t.FailNow()
+	}
+	if Equal(mt, "TextMarshaler", v((*textMarshaler)(nil))) || mt.Passed() {
+		t.FailNow()
+	}
+	if !Equal(mt, "<nil>", v((*textMarshaler)(nil))) || mt.Failed() {
+		t.FailNow()
+	}
 }
 
 func Test_Expect(t *testing.T) {
@@ -479,16 +619,20 @@ func Test_Expect(t *testing.T) {
 	var err error
 	x := 1
 	s := "hello"
-	Expect(mt, err, nil, x, 1, s, "hello")
-	mt.Passed(t)
-	Expect(mt, err, nil, x, 2, s, "hello")
-	mt.Failed(t)
-	Expect(mt, err, nil, x, 1, s, "world")
-	mt.Failed(t)
+	if !Expect(mt, err, nil, x, 1, s, "hello") || mt.Failed() {
+		t.FailNow()
+	}
+	if Expect(mt, err, nil, x, 2, s, "hello") || mt.Passed() {
+		t.FailNow()
+	}
+	if Expect(mt, err, nil, x, 1, s, "world") || mt.Passed() {
+		t.FailNow()
+	}
 
 	err = errors.New("failed")
 	x = 0
 	s = ""
-	Expect(mt, err, nil, x, 1, s, "hello")
-	mt.Failed(t)
+	if Expect(mt, err, nil, x, 1, s, "hello") || mt.Passed() {
+		t.FailNow()
+	}
 }

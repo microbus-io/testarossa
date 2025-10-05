@@ -34,40 +34,42 @@ func (mt *MockTestingT) FailNow() {
 func (mt *MockTestingT) Name() string {
 	return "Mock"
 }
-func (mt *MockTestingT) Failed(t *testing.T) {
-	if !mt.failed {
-		t.Fatal()
-	}
+func (mt *MockTestingT) Failed() (failed bool) {
+	failed = mt.failed
 	mt.failed = false
+	return failed
 }
-func (mt *MockTestingT) Passed(t *testing.T) {
-	if mt.failed {
-		t.Fatal()
-	}
+func (mt *MockTestingT) Passed() (passed bool) {
+	passed = !mt.failed
 	mt.failed = false
+	return passed
 }
 
 func Test_FailIf(t *testing.T) {
 	mt := &MockTestingT{}
 
 	droids := 1234
-	FailIf(mt, droids != 0, "These are not the droids you are looking for")
-	mt.Failed(t)
+	if !FailIf(mt, droids != 0, "These are not the droids you are looking for") || mt.Passed() {
+		t.FailNow()
+	}
 
 	err := errors.New("This is really bad")
-	FatalIfError(mt, err)
-	mt.Failed(t)
+	if !FatalIfError(mt, err) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_FailIfError(t *testing.T) {
 	mt := &MockTestingT{}
 
-	FailIfError(mt, nil, "No error here")
-	mt.Passed(t)
+	if FailIfError(mt, nil, "No error here") || mt.Failed() {
+		t.FailNow()
+	}
 
 	t.Run("subtest", func(t *testing.T) {
 		err := errors.New("error here")
-		FailIfError(mt, err, "Not good")
-		mt.Failed(t)
+		if !FailIfError(mt, err, "Not good") || mt.Passed() {
+			t.FailNow()
+		}
 	})
 }

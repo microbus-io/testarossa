@@ -70,16 +70,17 @@ func FailIfError(t TestingT, err error, args ...any) bool {
 }
 
 // FatalIf fails the test and stops further execution if the condition is met.
-func FatalIf(t TestingT, condition bool, args ...any) {
+func FatalIf(t TestingT, condition bool, args ...any) bool {
 	if condition {
 		FailIf(t, condition, args...)
 		t.FailNow()
 	}
+	return condition
 }
 
 // FatalIfError is a shortcut to FatalIf(t, err != nil, append([]any{err}, args...)...) .
-func FatalIfError(t TestingT, err error, args ...any) {
-	FatalIf(t, err != nil, append([]any{err}, args...)...)
+func FatalIfError(t TestingT, err error, args ...any) bool {
+	return FatalIf(t, err != nil, append([]any{err}, args...)...)
 }
 
 func stackTrace() (stackTrace string) {

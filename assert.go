@@ -135,18 +135,18 @@ func False(t TestingT, condition bool, args ...any) bool {
 // or if a slice doesn't contain an element,
 // or if a map doesn't contain a key.
 func Contains(t TestingT, whole any, sub any, args ...any) bool {
-	if isNil(whole) {
-		msgArgs := []any{"Nil does not contain '%v'", v(sub)}
-		return !FailIf(
-			t,
-			true,
-			append(msgArgs, args...)...,
-		)
+	msgArgs := []any{"Nil is not a container"}
+	if FailIf(
+		t,
+		isNil(whole),
+		append(msgArgs, args...)...,
+	) {
+		return false
 	}
 	if err, ok := whole.(error); ok {
 		whole = err.Error()
 	}
-	msgArgs := []any{"Expected '%v' to contain '%v'", v(whole), v(sub)}
+	msgArgs = []any{"Expected '%v' to contain '%v'", v(whole), v(sub)}
 	// Strings
 	if w, ok := whole.(string); ok {
 		if s, ok := sub.(string); ok {
@@ -210,7 +210,7 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 // or if a map contains a key.
 func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 	if isNil(whole) {
-		return false
+		return true
 	}
 	if err, ok := whole.(error); ok {
 		whole = err.Error()
@@ -265,12 +265,7 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 			append(msgArgs, args...)...,
 		)
 	}
-	msgArgs = []any{"Type %v doesn't support containment", wholeValue.Type()}
-	return !FailIf(
-		t,
-		true,
-		append(msgArgs, args...)...,
-	)
+	return true
 }
 
 // SliceContains fails the test if the slice does not contain the item.
@@ -320,7 +315,7 @@ func Len(t TestingT, obj any, length int, args ...any) bool {
 			objType.Kind() == reflect.String ||
 			objType.Kind() == reflect.Chan
 		if FailIf(t, !hasLength, "Type %v doesn't have a length", objType) {
-			return true
+			return false
 		}
 		actualLength = reflect.ValueOf(obj).Len()
 	}

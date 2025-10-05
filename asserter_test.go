@@ -24,30 +24,46 @@ import (
 func Test_Asserter(t *testing.T) {
 	mt := &MockTestingT{}
 	tt := For(mt)
-	tt.Error(errors.New("bad"))
-	mt.Passed(t)
-	tt.NoError(nil)
-	mt.Passed(t)
-	tt.Equal(1, 1)
-	mt.Passed(t)
-	tt.NotEqual(1, 0)
-	mt.Passed(t)
-	tt.Zero(0)
-	mt.Passed(t)
-	tt.NotZero(1)
-	mt.Passed(t)
-	tt.True(true)
-	mt.Passed(t)
-	tt.False(false)
-	mt.Passed(t)
-	tt.Contains([]int{1, 2, 3}, 1)
-	mt.Passed(t)
-	tt.NotContains([]int{1, 2, 3}, 0)
-	mt.Passed(t)
-	tt.Len([]int{1, 2, 3}, 3)
-	mt.Passed(t)
-	tt.Nil(nil)
-	mt.Passed(t)
-	tt.NotNil(1)
-	mt.Passed(t)
+	if !tt.Error(errors.New("bad")) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.NoError(nil) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.Equal(1, 1) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.NotEqual(1, 0) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.Zero(0) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.NotZero(1) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.True(true) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.False(false) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.Contains([]int{1, 2, 3}, 1) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.NotContains([]int{1, 2, 3}, 0) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.Len([]int{1, 2, 3}, 3) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.Nil(nil) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.NotNil(1) || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.Expect(1, 1, "x", "x") || mt.Failed() {
+		t.FailNow()
+	}
 }
