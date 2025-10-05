@@ -52,9 +52,15 @@ func NoError(t TestingT, err error, args ...any) bool {
 }
 
 // Equal fails the test if the two values are not equal.
+// Note: the expected value comes before the actual value in the argument list.
 func Equal(t TestingT, expected any, actual any, args ...any) bool {
+	nilActual := isNil(actual)
+	nilExpected := isNil(expected)
+	if nilActual && nilExpected {
+		return true
+	}
 	var msgArgs []any
-	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+	if !nilActual && !nilExpected && reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 		msgArgs = []any{"Expected type %v, actual type %v", reflect.TypeOf(expected), reflect.TypeOf(actual)}
 	} else {
 		msgArgs = []any{"Expected '%v', actual '%v'", v(expected), v(actual)}
@@ -67,11 +73,17 @@ func Equal(t TestingT, expected any, actual any, args ...any) bool {
 }
 
 // NotEqual fails the test if the two values are equal.
-func NotEqual(t TestingT, expected any, actual any, args ...any) bool {
-	msgArgs := []any{"Expected not to equal '%v'", v(expected)}
+// Note: the expected value comes before the actual value in the argument list.
+func NotEqual(t TestingT, unexpected any, actual any, args ...any) bool {
+	nilActual := isNil(actual)
+	nilUnexpected := isNil(unexpected)
+	if nilActual != nilUnexpected {
+		return true
+	}
+	msgArgs := []any{"Unexpected to equal '%v'", v(unexpected)}
 	return !FailIf(
 		t,
-		reflect.DeepEqual(expected, actual),
+		(nilActual && nilUnexpected) || reflect.DeepEqual(unexpected, actual),
 		append(msgArgs, args...)...,
 	)
 }
@@ -360,6 +372,28 @@ func NotNil(t TestingT, obj any, args ...any) bool {
 		isNil,
 		append(msgArgs, args...)...,
 	)
+}
+
+/*
+Expect fails the test if any of the paired values are not equal.
+Note: the expected value comes after the actual value in each pair.
+
+	result, err := doSomething(p1, p2)
+	Expect(t, err, nil, result, 4321)
+*/
+func Expect(t TestingT, actualExpectedPairs ...any) bool {
+	if FailIf(
+		t,
+		len(actualExpectedPairs)%2 != 0,
+		"Expected an even number of arguments",
+	) {
+		return false
+	}
+	result := true
+	for i := 0; i < len(actualExpectedPairs); i += 2 {
+		result = result && Equal(t, actualExpectedPairs[i+1], actualExpectedPairs[i])
+	}
+	return result
 }
 
 // v converts o to a string of no more than 1K in length.

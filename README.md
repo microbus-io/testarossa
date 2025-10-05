@@ -27,6 +27,8 @@ func TestMe(t *testing.T) {
     tt.Equal(1, 0, "You are not the %d", 1)
     err := errors.New("This is bad")
     tt.NoError(err)
+    result, err := doSomething(param)
+    tt.Expect(err, nil, result, 1234)
 }
 ```
 

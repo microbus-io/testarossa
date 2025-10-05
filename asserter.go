@@ -35,11 +35,13 @@ func (a *Asserter) NoError(err error, args ...any) bool {
 }
 
 // Equal fails the test if the two values are not equal.
+// Note: the expected value comes before the actual value in the argument list.
 func (a *Asserter) Equal(expected any, actual any, args ...any) bool {
 	return Equal(a.t, expected, actual, args...)
 }
 
 // NotEqual fails the test if the two values are equal.
+// Note: the expected value comes before the actual value in the argument list.
 func (a *Asserter) NotEqual(expected any, actual any, args ...any) bool {
 	return NotEqual(a.t, expected, actual, args...)
 }
@@ -87,4 +89,15 @@ func (a *Asserter) Nil(obj any, args ...any) bool {
 // NotNil fails the test if the object is nil.
 func (a *Asserter) NotNil(obj any, args ...any) bool {
 	return NotNil(a.t, obj, args...)
+}
+
+/*
+Expect fails the test if any of the paired values are not equal.
+Note: the expected value comes after the actual value in each pair.
+
+	result, err := doSomething(p1, p2)
+	tt.Expect(err, nil, result, 4321)
+*/
+func (a *Asserter) Expect(actualExpectedPairs ...any) bool {
+	return Expect(a.t, actualExpectedPairs...)
 }

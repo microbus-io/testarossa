@@ -50,6 +50,42 @@ func Test_Equality(t *testing.T) {
 	mt.Passed(t)
 	NotEqual(mt, map[string]int{"a": 1, "b": 2, "c": 3}, map[string]int{"a": 1, "b": 2, "c": 3})
 	mt.Failed(t)
+
+	var ptr *struct{}
+	Equal(mt, nil, ptr)
+	mt.Passed(t)
+	NotEqual(mt, nil, ptr)
+	mt.Failed(t)
+
+	ptr = &struct{}{}
+	Equal(mt, nil, ptr)
+	mt.Failed(t)
+	NotEqual(mt, nil, ptr)
+	mt.Passed(t)
+
+	var arr []int
+	Equal(mt, nil, arr)
+	mt.Passed(t)
+	NotEqual(mt, nil, arr)
+	mt.Failed(t)
+
+	arr = []int{1, 2, 3}
+	Equal(mt, nil, arr)
+	mt.Failed(t)
+	NotEqual(mt, nil, arr)
+	mt.Passed(t)
+
+	var err error
+	Equal(mt, nil, err)
+	mt.Passed(t)
+	NotEqual(mt, nil, err)
+	mt.Failed(t)
+
+	err = errors.New("failed")
+	Equal(mt, nil, err)
+	mt.Failed(t)
+	NotEqual(mt, nil, err)
+	mt.Passed(t)
 }
 
 func Test_Errors(t *testing.T) {
@@ -435,4 +471,24 @@ func Test_TextMarshaler(t *testing.T) {
 	mt.Failed(t)
 	Equal(mt, "<nil>", v((*textMarshaler)(nil)))
 	mt.Passed(t)
+}
+
+func Test_Expect(t *testing.T) {
+	mt := &MockTestingT{}
+
+	var err error
+	x := 1
+	s := "hello"
+	Expect(mt, err, nil, x, 1, s, "hello")
+	mt.Passed(t)
+	Expect(mt, err, nil, x, 2, s, "hello")
+	mt.Failed(t)
+	Expect(mt, err, nil, x, 1, s, "world")
+	mt.Failed(t)
+
+	err = errors.New("failed")
+	x = 0
+	s = ""
+	Expect(mt, err, nil, x, 1, s, "hello")
+	mt.Failed(t)
 }
