@@ -156,13 +156,27 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 				append(msgArgs, args...)...,
 			)
 		}
+		if b, ok := sub.([]byte); ok {
+			return !FailIf(
+				t,
+				!strings.Contains(w, string(b)),
+				append(msgArgs, args...)...,
+			)
+		}
 	}
 	// []byte
 	if w, ok := whole.([]byte); ok {
-		if s, ok := sub.([]byte); ok {
+		if b, ok := sub.([]byte); ok {
 			return !FailIf(
 				t,
-				!bytes.Contains(w, s),
+				!bytes.Contains(w, b),
+				append(msgArgs, args...)...,
+			)
+		}
+		if s, ok := sub.(string); ok {
+			return !FailIf(
+				t,
+				!strings.Contains(string(w), s),
 				append(msgArgs, args...)...,
 			)
 		}
@@ -225,13 +239,27 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 				append(msgArgs, args...)...,
 			)
 		}
+		if b, ok := sub.([]byte); ok {
+			return !FailIf(
+				t,
+				strings.Contains(w, string(b)),
+				append(msgArgs, args...)...,
+			)
+		}
 	}
 	// []byte
 	if w, ok := whole.([]byte); ok {
-		if s, ok := sub.([]byte); ok {
+		if b, ok := sub.([]byte); ok {
 			return !FailIf(
 				t,
-				bytes.Contains(w, s),
+				bytes.Contains(w, b),
+				append(msgArgs, args...)...,
+			)
+		}
+		if s, ok := sub.(string); ok {
+			return !FailIf(
+				t,
+				strings.Contains(string(w), s),
 				append(msgArgs, args...)...,
 			)
 		}

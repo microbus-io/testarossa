@@ -169,6 +169,20 @@ func Test_Contains(t *testing.T) {
 		t.FailNow()
 	}
 
+	// string and []byte
+	if !Contains(mt, "hello world", []byte("hello")) || mt.Failed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, "hello world", []byte("foo")) || mt.Failed() {
+		t.FailNow()
+	}
+	if !Contains(mt, []byte("hello world"), "hello") || mt.Failed() {
+		t.FailNow()
+	}
+	if !NotContains(mt, []byte("hello world"), "foo") || mt.Failed() {
+		t.FailNow()
+	}
+
 	// slice
 	if NotContains(mt, []byte("ABC"), []byte("AB")) || mt.Passed() {
 		t.FailNow()
