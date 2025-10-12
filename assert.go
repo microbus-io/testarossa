@@ -21,7 +21,11 @@ import (
 	"encoding"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
+
+	"github.com/andybalholm/cascadia"
+	"golang.org/x/net/html"
 )
 
 // Error fails the test if err is nil.
@@ -402,7 +406,7 @@ Expect fails the test if any of the paired values are not equal.
 Note: the expected value comes after the actual value in each pair.
 
 	result, err := doSomething(p1, p2)
-	Expect(t, err, nil, result, 4321)
+	Expect(t, result, 4321, err, nil)
 */
 func Expect(t TestingT, actualExpectedPairs ...any) bool {
 	if FailIf(
@@ -417,6 +421,123 @@ func Expect(t TestingT, actualExpectedPairs ...any) bool {
 		result = result && Equal(t, actualExpectedPairs[i+1], actualExpectedPairs[i])
 	}
 	return result
+}
+
+/*
+HTMLMatch fails the test if no HTML element matching the CSS selector query was found
+to also match the regular expression by the inner text of any of its descendants.
+
+Examples:
+
+	HTMLMatch(t, html, `TR > TD > A.expandable[href]`, "")
+	HTMLMatch(t, html, `DIV#main_panel`, `^Help$``)
+	HTMLMatch(t, html, `TR TD INPUT[name="x"]`, `[0-9]+``)
+*/
+func HTMLMatch(t TestingT, htmlBody []byte, cssSelectorQuery string, innerTextRegExp string, args ...any) bool {
+	doc, selector, re, ok := parseDocSelectorAndRegexp(t, htmlBody, cssSelectorQuery, innerTextRegExp)
+	if !ok {
+		return false
+	}
+	var textMatches func(n *html.Node) bool
+	textMatches = func(n *html.Node) bool {
+		for x := n.FirstChild; x != nil; x = x.NextSibling {
+			if re.MatchString(x.Data) || textMatches(x) {
+				return true
+			}
+		}
+		return false
+	}
+	matches := selector.MatchAll(doc)
+	found := false
+	for _, elem := range matches {
+		if textMatches(elem) {
+			found = true
+			break
+		}
+	}
+	var msgArgs []any
+	if len(matches) == 0 {
+		msgArgs = []any{"No HTML element matched '%s'", cssSelectorQuery}
+	} else {
+		msgArgs = []any{"No HTML element matching '%s' and '%s'", cssSelectorQuery, innerTextRegExp}
+	}
+	return !FailIf(
+		t,
+		!found,
+		append(msgArgs, args...)...,
+	)
+}
+
+/*
+HTMLNotMatch fails the test if at least one HTML element matching the CSS selector query was found
+to also match the regular expression by the inner text of any of its descendants.
+
+Examples:
+
+	HTMLNotMatch(t, html, `TR > TD > A.expandable[href]`, "")
+	HTMLNotMatch(t, html, `DIV#main_panel`, "^Help$")
+	HTMLNotMatch(t, html, `TR TD INPUT[name="x"]`, `[0-9]+``)
+*/
+func HTMLNotMatch(t TestingT, htmlBody []byte, cssSelectorQuery string, innerTextRegExp string, args ...any) bool {
+	doc, selector, re, ok := parseDocSelectorAndRegexp(t, htmlBody, cssSelectorQuery, innerTextRegExp)
+	if !ok {
+		return false
+	}
+	var textMatches func(n *html.Node) bool
+	textMatches = func(n *html.Node) bool {
+		for x := n.FirstChild; x != nil; x = x.NextSibling {
+			if re.MatchString(x.Data) || textMatches(x) {
+				return true
+			}
+		}
+		return false
+	}
+	matches := selector.MatchAll(doc)
+	found := false
+	for _, elem := range matches {
+		if textMatches(elem) {
+			found = true
+			break
+		}
+	}
+	msgArgs := []any{"An HTML element matched '%s' and '%s'", cssSelectorQuery, innerTextRegExp}
+	return !FailIf(
+		t,
+		found,
+		append(msgArgs, args...)...,
+	)
+}
+
+func parseDocSelectorAndRegexp(t TestingT, htmlBody []byte, cssSelectorQuery string, regexpSearchStr string) (doc *html.Node, selector cascadia.Selector, re *regexp.Regexp, ok bool) {
+	var err error
+	doc, err = html.Parse(bytes.NewReader(htmlBody))
+	if err != nil {
+		FailIf(
+			t,
+			true,
+			"Failed to parse HTML: %s", err.Error(),
+		)
+		return nil, nil, nil, false
+	}
+	selector, err = cascadia.Compile(cssSelectorQuery)
+	if err != nil {
+		FailIf(
+			t,
+			true,
+			"Invalid CSS selector query '%s': %s", cssSelectorQuery, err.Error(),
+		)
+		return nil, nil, nil, false
+	}
+	re, err = regexp.Compile(regexpSearchStr)
+	if err != nil {
+		FailIf(
+			t,
+			true,
+			"Invalid regular expression '%s': %s", regexpSearchStr, err.Error(),
+		)
+		return nil, nil, nil, false
+	}
+	return doc, selector, re, true
 }
 
 // v converts o to a string of no more than 1K in length.

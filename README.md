@@ -9,11 +9,16 @@
 ```go
 func TestMe(t *testing.T) {
     testarossa.Equal(t, 1, 0, "You are not the %d", 1)
+    
     err := errors.New("This is bad")
     testarossa.NoError(t, err)
 
+    html := `<html><body><div class="banner">Hello, <b>World</b>!</div></body></html>`
+    testarossa.HTMLMatch(t, html, "DIV.banner", "^World$")
+
     droids := 1234
     testarossa.FailIf(t, droids != 0, "These are not the droids you are looking for")
+    
     err = errors.New("This is really bad")
     testarossa.FatalIfError(t, err)
 }
@@ -24,11 +29,17 @@ as well as a more object-oriented pattern:
 ```go
 func TestMe(t *testing.T) {
     tt := testarossa.For(t)
+
     tt.Equal(1, 0, "You are not the %d", 1)
+    
     err := errors.New("This is bad")
     tt.NoError(err)
+    
     result, err := doSomething(param)
     tt.Expect(err, nil, result, 1234)
+
+    html := `<html><body><div class="banner">Hello, <b>World</b>!</div></body></html>`
+    tt.HTMLMatch(html, "DIV.banner", "^World$")
 }
 ```
 

@@ -318,6 +318,15 @@ func Test_Contains(t *testing.T) {
 	if !NotContains(mt, 1, 1) || mt.Failed() {
 		t.FailNow()
 	}
+
+	// Arrays
+	arr := [3]int{1, 2, 3}
+	if !Contains(mt, arr, 2) || mt.Failed() {
+		t.FailNow()
+	}
+	if Contains(mt, arr, 4) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_Len(t *testing.T) {
@@ -350,6 +359,14 @@ func Test_Len(t *testing.T) {
 	ch <- true
 	ch <- true
 	if !Len(mt, ch, 3) || mt.Failed() {
+		t.FailNow()
+	}
+
+	arr := [5]int{1, 2, 3, 4, 5}
+	if !Len(mt, arr, 5) || mt.Failed() {
+		t.FailNow()
+	}
+	if Len(mt, arr, 3) || mt.Passed() {
 		t.FailNow()
 	}
 
@@ -529,7 +546,7 @@ func Test_SliceContains(t *testing.T) {
 	}
 }
 
-func Test_SliceQual(t *testing.T) {
+func Test_SliceEqual(t *testing.T) {
 	mt := &MockTestingT{}
 
 	if !SliceEqual(mt, []int{1, 2, 3}, []int{1, 2, 3}) || mt.Failed() {
@@ -647,6 +664,139 @@ func Test_Expect(t *testing.T) {
 	x = 0
 	s = ""
 	if Expect(mt, err, nil, x, 1, s, "hello") || mt.Passed() {
+		t.FailNow()
+	}
+}
+
+func Test_HTMLElement(t *testing.T) {
+	mt := &MockTestingT{}
+
+	htmlBody := []byte(`<html><body><div class="banner" id="id123">Cool <b>Banner</b>!</div></body></html>`)
+
+	// Exists
+	if !HTMLMatch(mt, htmlBody, "DIV.banner", "") || mt.Failed() {
+		t.FailNow()
+	}
+	if !HTMLMatch(mt, htmlBody, "BODY > DIV.banner", "") || mt.Failed() {
+		t.FailNow()
+	}
+	if !HTMLMatch(mt, htmlBody, "BODY > DIV#id123", "") || mt.Failed() {
+		t.FailNow()
+	}
+	if !HTMLMatch(mt, htmlBody, "BODY B", "") || mt.Failed() {
+		t.FailNow()
+	}
+	if HTMLMatch(mt, htmlBody, "BODY > B", "") || mt.Passed() {
+		t.FailNow()
+	}
+
+	// Not exists
+	if !HTMLNotMatch(mt, htmlBody, "BODY > B", "") || mt.Failed() {
+		t.FailNow()
+	}
+
+	// Contains
+	if !HTMLMatch(mt, htmlBody, "DIV.banner", "Cool") || mt.Failed() {
+		t.FailNow()
+	}
+	if !HTMLMatch(mt, htmlBody, "DIV.banner > B", "Banner") || mt.Failed() {
+		t.FailNow()
+	}
+
+	// Not contains
+	if !HTMLNotMatch(mt, htmlBody, "DIV.banner > B", "Title") || mt.Failed() {
+		t.FailNow()
+	}
+	if HTMLNotMatch(mt, htmlBody, "DIV.banner > B", "Banner") || mt.Passed() {
+		t.FailNow()
+	}
+	if !HTMLNotMatch(mt, htmlBody, "DIV.banner > B", "Title") || mt.Failed() {
+		t.FailNow()
+	}
+}
+
+func Test_EdgeCases(t *testing.T) {
+	mt := &MockTestingT{}
+
+	// Test Expect with odd number of arguments
+	if Expect(mt, 1, 2, 3) || mt.Passed() {
+		t.FailNow()
+	}
+
+	// Test very long strings truncation in v()
+	longStr := string(make([]byte, 2000))
+	formatted := v(longStr)
+	if len([]rune(formatted)) > 1025 {
+		t.FailNow()
+	}
+
+	// Test v() with nil stringer
+	var nilStringer *stringer
+	if v(nilStringer) != "<nil>" {
+		t.FailNow()
+	}
+
+	// Test v() with nil text marshaler
+	var nilMarshaler *textMarshaler
+	if v(nilMarshaler) != "<nil>" {
+		t.FailNow()
+	}
+
+	// Test Contains with empty byte slice
+	if !Contains(mt, []byte("test"), []byte("")) || mt.Failed() {
+		t.FailNow()
+	}
+}
+
+func Test_HTMLEdgeCases(t *testing.T) {
+	mt := &MockTestingT{}
+
+	// Test with malformed HTML
+	badHTML := []byte(`<html><body><div>Unclosed div`)
+	if !HTMLMatch(mt, badHTML, "DIV", "") || mt.Failed() {
+		t.FailNow()
+	}
+
+	// Test with nested elements
+	nestedHTML := []byte(`<html><body><div><span><b>Deep</b></span></div></body></html>`)
+	if !HTMLMatch(mt, nestedHTML, "DIV", "Deep") || mt.Failed() {
+		t.FailNow()
+	}
+
+	// Test with empty HTML
+	emptyHTML := []byte(``)
+	if HTMLMatch(mt, emptyHTML, "DIV", "") || mt.Passed() {
+		t.FailNow()
+	}
+
+	// Test regex pattern matching
+	regexHTML := []byte(`<html><body><div>Item 123</div></body></html>`)
+	if !HTMLMatch(mt, regexHTML, "DIV", `\d+`) || mt.Failed() {
+		t.FailNow()
+	}
+	if HTMLMatch(mt, regexHTML, "DIV", `[a-z]+\s+[a-z]+`) || mt.Passed() {
+		t.FailNow()
+	}
+}
+
+func Test_FailIfFormatting(t *testing.T) {
+	mt := &MockTestingT{}
+
+	// Test with multiple format arguments
+	if !FailIf(mt, true, "Error %s %d", "code", 404) || mt.Passed() {
+		t.FailNow()
+	}
+
+	// Test with no arguments
+	if !FailIf(mt, true) || mt.Passed() {
+		t.FailNow()
+	}
+
+	// Test FatalIf (would normally stop execution, but MockTestingT doesn't)
+	if !FatalIf(mt, true, "Fatal error") || mt.Passed() {
+		t.FailNow()
+	}
+	if FatalIf(mt, false, "Should not fail") || mt.Failed() {
 		t.FailNow()
 	}
 }

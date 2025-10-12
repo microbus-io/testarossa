@@ -21,7 +21,7 @@ import (
 	"testing"
 )
 
-func Test_Asserter(t *testing.T) {
+func TestAsserter_All(t *testing.T) {
 	mt := &MockTestingT{}
 	tt := For(mt)
 	if !tt.Error(errors.New("bad")) || mt.Failed() {
@@ -64,6 +64,50 @@ func Test_Asserter(t *testing.T) {
 		t.FailNow()
 	}
 	if !tt.Expect(1, 1, "x", "x") || mt.Failed() {
+		t.FailNow()
+	}
+}
+
+func TestAsserter_HTML(t *testing.T) {
+	mt := &MockTestingT{}
+	tt := For(mt)
+	htmlBody := []byte(`<html><body><div class="banner" id="id123">Cool <b>Banner</b>!</div></body></html>`)
+
+	if !tt.HTMLMatch(htmlBody, "B", "") || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.HTMLMatch(htmlBody, "DIV.banner", "") || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.HTMLMatch(htmlBody, "DIV#id123", "") || mt.Failed() {
+		t.FailNow()
+	}
+	if !tt.HTMLMatch(htmlBody, "B", "Banner") || mt.Failed() {
+		t.FailNow()
+	}
+
+	if !tt.HTMLMatch(htmlBody, "DIV", "Banner") || mt.Failed() {
+		t.FailNow()
+	}
+	if tt.HTMLNotMatch(htmlBody, "DIV", "Banner") || mt.Passed() {
+		t.FailNow()
+	}
+
+	if !tt.HTMLNotMatch(htmlBody, "DIV", "Title") || mt.Failed() {
+		t.FailNow()
+	}
+	if tt.HTMLMatch(htmlBody, "DIV", "Title") || mt.Passed() {
+		t.FailNow()
+	}
+
+	// Errors
+	if tt.HTMLMatch(htmlBody, "DIV.#id123", "Banner") || mt.Passed() {
+		t.FailNow()
+	}
+	if tt.HTMLMatch(htmlBody, "DIV", "[Banner") || mt.Passed() {
+		t.FailNow()
+	}
+	if tt.HTMLMatch([]byte(`<html><</html>`), "DIV", "") || mt.Passed() {
 		t.FailNow()
 	}
 }
