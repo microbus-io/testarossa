@@ -191,6 +191,7 @@ func TestTableDriven_HTMLMatch(t *testing.T) {
 		{"element does not exist", []byte(`<html><span>test</span></html>`), "DIV", "", false},
 		{"element with class", []byte(`<html><div class="main">test</div></html>`), "DIV.main", "", true},
 		{"element with id", []byte(`<html><div id="header">test</div></html>`), "DIV#header", "", true},
+		{"element with no children", []byte(`<html><input type=text name=hello></html>`), "INPUT[type=text]", "", true},
 		{"text matches", []byte(`<html><div>hello world</div></html>`), "DIV", "world", true},
 		{"text does not match", []byte(`<html><div>hello world</div></html>`), "DIV", "goodbye", false},
 		{"regex matches", []byte(`<html><div>test123</div></html>`), "DIV", `\d+`, true},

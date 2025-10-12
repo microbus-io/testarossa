@@ -668,10 +668,10 @@ func Test_Expect(t *testing.T) {
 	}
 }
 
-func Test_HTMLElement(t *testing.T) {
+func Test_HTMLMatch(t *testing.T) {
 	mt := &MockTestingT{}
 
-	htmlBody := []byte(`<html><body><div class="banner" id="id123">Cool <b>Banner</b>!</div></body></html>`)
+	htmlBody := []byte(`<html><body><div class="banner" id="id123">Cool <b>Banner</b>!</div><br></body></html>`)
 
 	// Exists
 	if !HTMLMatch(mt, htmlBody, "DIV.banner", "") || mt.Failed() {
@@ -687,6 +687,9 @@ func Test_HTMLElement(t *testing.T) {
 		t.FailNow()
 	}
 	if HTMLMatch(mt, htmlBody, "BODY > B", "") || mt.Passed() {
+		t.FailNow()
+	}
+	if !HTMLMatch(mt, htmlBody, "BR", "") || mt.Failed() {
 		t.FailNow()
 	}
 

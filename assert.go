@@ -440,8 +440,11 @@ func HTMLMatch(t TestingT, htmlBody []byte, cssSelectorQuery string, innerTextRe
 	}
 	var textMatches func(n *html.Node) bool
 	textMatches = func(n *html.Node) bool {
+		if re.MatchString(n.Data) {
+			return true
+		}
 		for x := n.FirstChild; x != nil; x = x.NextSibling {
-			if re.MatchString(x.Data) || textMatches(x) {
+			if textMatches(x) {
 				return true
 			}
 		}
@@ -485,8 +488,11 @@ func HTMLNotMatch(t TestingT, htmlBody []byte, cssSelectorQuery string, innerTex
 	}
 	var textMatches func(n *html.Node) bool
 	textMatches = func(n *html.Node) bool {
+		if re.MatchString(n.Data) {
+			return true
+		}
 		for x := n.FirstChild; x != nil; x = x.NextSibling {
-			if re.MatchString(x.Data) || textMatches(x) {
+			if textMatches(x) {
 				return true
 			}
 		}
