@@ -329,6 +329,38 @@ func Test_Contains(t *testing.T) {
 	}
 }
 
+func Test_Match(t *testing.T) {
+	mt := &MockTestingT{}
+
+	// string
+	if !Match(mt, "hello world", "hello") || mt.Failed() {
+		t.FailNow()
+	}
+	if !Match(mt, "hello world", "^hello") || mt.Failed() {
+		t.FailNow()
+	}
+	if !Match(mt, "hello world", "w.rld$") || mt.Failed() {
+		t.FailNow()
+	}
+	if Match(mt, "hello world", "goodbye") || mt.Passed() {
+		t.FailNow()
+	}
+	if Match(mt, "hello world", ".*x") || mt.Passed() {
+		t.FailNow()
+	}
+
+	if NotMatch(mt, "hello world", "^hello") || mt.Passed() {
+		t.FailNow()
+	}
+	if !NotMatch(mt, "hello world", "goodbye") || mt.Failed() {
+		t.FailNow()
+	}
+
+	if Match(mt, "hello world", "[bad.*") || mt.Passed() {
+		t.FailNow()
+	}
+}
+
 func Test_Len(t *testing.T) {
 	mt := &MockTestingT{}
 
@@ -666,6 +698,10 @@ func Test_Expect(t *testing.T) {
 	if Expect(mt, err, nil, x, 1, s, "hello") || mt.Passed() {
 		t.FailNow()
 	}
+
+	if Expect(mt, 1, 2, err, nil) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func Test_HTMLMatch(t *testing.T) {
@@ -714,6 +750,14 @@ func Test_HTMLMatch(t *testing.T) {
 		t.FailNow()
 	}
 	if !HTMLNotMatch(mt, htmlBody, "DIV.banner > B", "Title") || mt.Failed() {
+		t.FailNow()
+	}
+
+	// nil
+	if HTMLMatch(mt, nil, "DIV", "text") || mt.Passed() {
+		t.FailNow()
+	}
+	if !HTMLNotMatch(mt, nil, "DIV", "text") || mt.Failed() {
 		t.FailNow()
 	}
 }

@@ -129,3 +129,13 @@ Examples:
 func (tt *Asserter) HTMLNotMatch(htmlBody []byte, cssSelectorQuery string, innerTextRegExp string, args ...any) bool {
 	return HTMLNotMatch(tt.t, htmlBody, cssSelectorQuery, innerTextRegExp, args...)
 }
+
+// Match fails the test if a string doesn't match a regular expression.
+func (tt *Asserter) Match(whole string, regexpStr string, args ...any) bool {
+	return Match(tt.t, whole, regexpStr, args...)
+}
+
+// NotMatch fails the test if a string matches a regular expression.
+func (tt *Asserter) NotMatch(whole string, regexpStr string, args ...any) bool {
+	return NotMatch(tt.t, whole, regexpStr, args...)
+}

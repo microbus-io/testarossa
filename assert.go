@@ -134,6 +134,46 @@ func False(t TestingT, condition bool, args ...any) bool {
 	)
 }
 
+// Match fails the test if a string doesn't match a regular expression.
+func Match(t TestingT, whole string, regexpStr string, args ...any) bool {
+	re, err := regexp.Compile(regexpStr)
+	if err != nil {
+		msgArgs := []any{"Invalid regular expression '%s': %s", regexpStr, err.Error()}
+		FailIf(
+			t,
+			true,
+			append(msgArgs, args...)...,
+		)
+		return false
+	}
+	msgArgs := []any{"Expected '%v' to match regular expression '%v'", v(whole), v(regexpStr)}
+	return !FailIf(
+		t,
+		!re.MatchString(whole),
+		append(msgArgs, args...)...,
+	)
+}
+
+// NotMatch fails the test if a string matches a regular expression.
+func NotMatch(t TestingT, whole string, regexpStr string, args ...any) bool {
+	re, err := regexp.Compile(regexpStr)
+	if err != nil {
+		msgArgs := []any{"Invalid regular expression '%s': %s", regexpStr, err.Error()}
+		FailIf(
+			t,
+			true,
+			append(msgArgs, args...)...,
+		)
+		return false
+	}
+	msgArgs := []any{"Expected '%v' not to match regular expression '%v'", v(whole), v(regexpStr)}
+	return !FailIf(
+		t,
+		re.MatchString(whole),
+		append(msgArgs, args...)...,
+	)
+}
+
 // Contains fails the test if a string or error don't contain a substring,
 // or if a byte slice doesn't contain a byte subslice,
 // or if a slice doesn't contain an element,
@@ -178,6 +218,7 @@ func Contains(t TestingT, whole any, sub any, args ...any) bool {
 			)
 		}
 		if s, ok := sub.(string); ok {
+			msgArgs = []any{"Expected '%v' to contain '%v'", v(string(w)), v(s)}
 			return !FailIf(
 				t,
 				!strings.Contains(string(w), s),
@@ -261,6 +302,7 @@ func NotContains(t TestingT, whole any, sub any, args ...any) bool {
 			)
 		}
 		if s, ok := sub.(string); ok {
+			msgArgs = []any{"Expected '%v' not to contain '%v'", v(string(w)), v(s)}
 			return !FailIf(
 				t,
 				strings.Contains(string(w), s),
@@ -416,6 +458,15 @@ func Expect(t TestingT, actualExpectedPairs ...any) bool {
 	) {
 		return false
 	}
+	// Test err==nil first and fail fast - for checking return args from function calls
+	for i := 0; i < len(actualExpectedPairs); i += 2 {
+		if err, ok := actualExpectedPairs[i].(error); ok && isNil(actualExpectedPairs[i+1]) {
+			if !NoError(t, err) {
+				return false
+			}
+		}
+	}
+	// Test all pairs
 	result := true
 	for i := 0; i < len(actualExpectedPairs); i += 2 {
 		result = result && Equal(t, actualExpectedPairs[i+1], actualExpectedPairs[i])
@@ -425,7 +476,7 @@ func Expect(t TestingT, actualExpectedPairs ...any) bool {
 
 /*
 HTMLMatch fails the test if no HTML element matching the CSS selector query was found
-to also match the regular expression by the inner text of any of its descendants.
+to also match the regular expression against the inner text of any of its descendants.
 
 Examples:
 
@@ -473,7 +524,7 @@ func HTMLMatch(t TestingT, htmlBody []byte, cssSelectorQuery string, innerTextRe
 
 /*
 HTMLNotMatch fails the test if at least one HTML element matching the CSS selector query was found
-to also match the regular expression by the inner text of any of its descendants.
+to also match the regular expression against the inner text of one of its descendants.
 
 Examples:
 

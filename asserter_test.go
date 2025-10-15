@@ -66,6 +66,18 @@ func TestAsserter_All(t *testing.T) {
 	if !tt.Expect(1, 1, "x", "x") || mt.Failed() {
 		t.FailNow()
 	}
+	if !tt.Match("foo bar", "ba.$") || mt.Failed() {
+		t.FailNow()
+	}
+	if tt.Match("foo bar", "za.") || mt.Passed() {
+		t.FailNow()
+	}
+	if !tt.NotMatch("foo bar", "^moo") || mt.Failed() {
+		t.FailNow()
+	}
+	if tt.NotMatch("foo bar", `\sb`) || mt.Passed() {
+		t.FailNow()
+	}
 }
 
 func TestAsserter_HTML(t *testing.T) {
