@@ -8,7 +8,8 @@
 
 ```go
 func TestMe(t *testing.T) {
-    testarossa.Equal(t, 1, 0, "You are not the %d", 1)
+    neo := 1999
+    testarossa.Equal(t, 1, neo, "You are not the %d", 1)
     
     err := errors.New("This is bad")
     testarossa.NoError(t, err)
@@ -28,18 +29,19 @@ as well as a more object-oriented pattern:
 
 ```go
 func TestMe(t *testing.T) {
-    tt := testarossa.For(t)
+    assert := testarossa.For(t)
 
-    tt.Equal(1, 0, "You are not the %d", 1)
+    neo := 1999
+    assert.Equal(1, neo, "You are not the %d", 1)
     
     err := errors.New("This is bad")
-    tt.NoError(err)
+    assert.NoError(err)
     
     result, err := doSomething(param)
-    tt.Expect(err, nil, result, 1234)
+    assert.Expect(err, nil, result, 1234)
 
     html := `<html><body><div class="banner">Hello, <b>World</b>!</div></body></html>`
-    tt.HTMLMatch(html, "DIV.banner", "^World$")
+    assert.HTMLMatch(html, "DIV.banner", "^World$")
 }
 ```
 
@@ -48,7 +50,7 @@ Example test output:
 ```
 --- FAIL: TestMe
     /my_projects/github.com/microbus-io/testarossa/my_test.go:10
-    Expected '1', actual '0'
+    Expected '1', actual '1999'
     You are not the 1
 --- FAIL: TestMe
     /my_projects/github.com/microbus-io/testarossa/my_test.go:12

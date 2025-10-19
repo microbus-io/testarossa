@@ -25,7 +25,8 @@ import (
 func Test_Equality(t *testing.T) {
 	mt := &MockTestingT{}
 
-	if Equal(mt, 1, 0, "You are not the %d", 1) || mt.Passed() {
+	neo := 1999
+	if Equal(mt, 1, neo, "You are not the %d", 1) || mt.Passed() {
 		t.FailNow()
 	}
 
@@ -106,6 +107,15 @@ func Test_Equality(t *testing.T) {
 		t.FailNow()
 	}
 	if !NotEqual(mt, nil, err) || mt.Failed() {
+		t.FailNow()
+	}
+
+	t1 := time.Now()
+	t2 := time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), t1.Nanosecond(), t1.Location())
+	if !Equal(mt, t1, t2) || mt.Failed() {
+		t.FailNow()
+	}
+	if !True(mt, t1 != t2) || mt.Failed() {
 		t.FailNow()
 	}
 }

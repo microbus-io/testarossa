@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/andybalholm/cascadia"
 	"golang.org/x/net/html"
@@ -69,6 +70,15 @@ func Equal(t TestingT, expected any, actual any, args ...any) bool {
 	} else {
 		msgArgs = []any{"Expected '%v', actual '%v'", v(expected), v(actual)}
 	}
+	t1, ok1 := expected.(time.Time)
+	t2, ok2 := actual.(time.Time)
+	if ok1 && ok2 {
+		return !FailIf(
+			t,
+			!t1.Equal(t2),
+			append(msgArgs, args...)...,
+		)
+	}
 	return !FailIf(
 		t,
 		!reflect.DeepEqual(expected, actual),
@@ -85,6 +95,15 @@ func NotEqual(t TestingT, unexpected any, actual any, args ...any) bool {
 		return true
 	}
 	msgArgs := []any{"Unexpected to equal '%v'", v(unexpected)}
+	t1, ok1 := unexpected.(time.Time)
+	t2, ok2 := actual.(time.Time)
+	if ok1 && ok2 {
+		return !FailIf(
+			t,
+			t1.Equal(t2),
+			append(msgArgs, args...)...,
+		)
+	}
 	return !FailIf(
 		t,
 		(nilActual && nilUnexpected) || reflect.DeepEqual(unexpected, actual),
