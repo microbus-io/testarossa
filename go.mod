@@ -8,3 +8,7 @@ require (
 	github.com/andybalholm/cascadia v1.3.3
 	golang.org/x/net v0.46.0
 )
+
+require github.com/microbus-io/copyrighter v1.4.0 // indirect
+
+tool github.com/microbus-io/copyrighter
