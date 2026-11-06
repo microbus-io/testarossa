@@ -24,6 +24,15 @@ func For(t TestingT) *Asserter {
 	return &Asserter{t: t}
 }
 
+// Must stops the test immediately if ok is false. It wraps an assertion, which has already reported the failure:
+//
+//	assert.Must(assert.NoError(err))
+//
+// Like t.FailNow, Must must be called from the goroutine running the test.
+func (tt *Asserter) Must(ok bool) {
+	Must(tt.t, ok)
+}
+
 // Error fails the test if err is nil.
 func (tt *Asserter) Error(err error, args ...any) bool {
 	return Error(tt.t, err, args...)

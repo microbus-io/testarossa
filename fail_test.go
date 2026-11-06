@@ -22,7 +22,8 @@ import (
 )
 
 type MockTestingT struct {
-	failed bool
+	failed  bool
+	stopped bool
 }
 
 func (mt *MockTestingT) Fail() {
@@ -30,6 +31,7 @@ func (mt *MockTestingT) Fail() {
 }
 func (mt *MockTestingT) FailNow() {
 	mt.failed = true
+	mt.stopped = true
 }
 func (mt *MockTestingT) Name() string {
 	return "Mock"
@@ -72,4 +74,18 @@ func Test_FailIfError(t *testing.T) {
 			t.FailNow()
 		}
 	})
+}
+
+func Test_Must(t *testing.T) {
+	mt := &MockTestingT{}
+
+	Must(mt, NoError(mt, nil))
+	if mt.stopped || mt.Failed() {
+		t.FailNow()
+	}
+
+	Must(mt, NoError(mt, errors.New("This is really bad")))
+	if !mt.stopped || mt.Passed() {
+		t.FailNow()
+	}
 }

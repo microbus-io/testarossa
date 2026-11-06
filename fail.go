@@ -83,6 +83,17 @@ func FatalIfError(t TestingT, err error, args ...any) bool {
 	return FatalIf(t, err != nil, append([]any{err}, args...)...)
 }
 
+// Must stops the test immediately if ok is false. It wraps an assertion, which has already reported the failure:
+//
+//	testarossa.Must(t, testarossa.NoError(t, err))
+//
+// Like t.FailNow, Must must be called from the goroutine running the test.
+func Must(t TestingT, ok bool) {
+	if !ok {
+		t.FailNow()
+	}
+}
+
 func stackTrace() (stackTrace string) {
 	for lvl := 2; true; lvl++ {
 		pc, file, line, ok := runtime.Caller(lvl)

@@ -123,3 +123,18 @@ func TestAsserter_HTML(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestAsserter_Must(t *testing.T) {
+	mt := &MockTestingT{}
+	tt := For(mt)
+
+	tt.Must(tt.NoError(nil))
+	if mt.stopped || mt.Failed() {
+		t.FailNow()
+	}
+
+	tt.Must(tt.NoError(errors.New("bad")))
+	if !mt.stopped || mt.Passed() {
+		t.FailNow()
+	}
+}

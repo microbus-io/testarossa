@@ -22,6 +22,9 @@ func TestMe(t *testing.T) {
     
     err = errors.New("This is really bad")
     testarossa.FatalIfError(t, err)
+
+    db, err := openDatabase()
+    testarossa.Must(t, testarossa.NoError(t, err)) // Stops the test if the assertion fails
 }
 ```
 
@@ -42,6 +45,9 @@ func TestMe(t *testing.T) {
 
     html := `<html><body><div class="banner">Hello, <b>World</b>!</div></body></html>`
     assert.HTMLMatch(html, "DIV.banner", "^World$")
+
+    db, err := openDatabase()
+    assert.Must(assert.NoError(err)) // Stops the test if the assertion fails
 }
 ```
 
